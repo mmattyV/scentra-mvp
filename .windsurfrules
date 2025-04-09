@@ -85,3 +85,14 @@ const searchParams = await props.searchParams
 - Database: AWS DynamoDB
 - Unit and integration testing using Jest and React Testing Library
 - Separate development and production environments
+
+## Coding Pattern Preferences
+- Avoid having files over 200-300 lines of code. Refactor into smaller files
+- Never overwrite my .env files without my permission
+- Mocking data is only needed for tests; never mock for production or development
+
+## Coding Workflow Preferences
+- Do not touch code that is not related to the current task
+- Write thorough tests for all major functionality
+- Avoid making major changes to the patterns and architecture of how a feature works after it has shown to work well, unless explicitly requested
+- Always think about what other methods and areas of code might be affected by the changes you are making
