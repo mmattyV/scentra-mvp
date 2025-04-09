@@ -143,41 +143,40 @@ export default function ProductPage() {
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => {}} // Will implement later
-                className="w-full py-4 text-white bg-black rounded-lg hover:bg-gray-800 transition-colors font-medium"
-              >
-                Add to Cart
-              </button>
-              <button
-                onClick={() => {}} // Will implement later
-                className="w-full py-4 text-black bg-white border-2 border-black rounded-lg hover:bg-gray-50 transition-colors font-medium"
-              >
-                Sell
-              </button>
-            </div>
+            {/* Action Buttons and Info Links Container */}
+            <div className="mt-8 space-y-6">
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => {}} // Will implement later
+                  className="w-full py-4 text-white bg-black rounded-lg hover:bg-gray-800 transition-colors font-medium"
+                >
+                  Add to Cart
+                </button>
+                <button
+                  onClick={() => {}} // Will implement later
+                  className="w-full py-4 text-black bg-white border-2 border-black rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Sell
+                </button>
+              </div>
 
               {/* Info Links */}
-              <div className="absolute bottom-0 left-0 right-0 space-y-2 text-center">
-                <div>
-                  <button
-                    onClick={() => setReturnPolicyOpen(true)}
-                    className="font-semibold text-gray-500 hover:text-gray-800 transition-colors"
-                  >
-                    Return Policy
-                  </button>
-                </div>
-                <div>
-                  <button
-                    onClick={() => setVerificationOpen(true)}
-                    className="font-semibold text-gray-500 hover:text-gray-800 transition-colors"
-                  >
-                    Verification Information
-                  </button>
-                </div>
+              <div className="flex flex-col items-center space-y-2 pt-4">
+                <button
+                  onClick={() => setReturnPolicyOpen(true)}
+                  className="font-semibold text-gray-500 hover:text-gray-800 transition-colors underline"
+                >
+                  Return Policy
+                </button>
+                <button
+                  onClick={() => setVerificationOpen(true)}
+                  className="font-semibold text-gray-500 hover:text-gray-800 transition-colors underline"
+                >
+                  Verification Information
+                </button>
               </div>
+            </div>
               </div>
             </div>
           </div>

@@ -77,13 +77,13 @@ export default function CurrentListingsPage() {
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => {}}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors underline"
                 >
                   Change Ask
                 </button>
                 <button
                   onClick={() => {}}
-                  className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors underline"
                 >
                   Take Down
                 </button>

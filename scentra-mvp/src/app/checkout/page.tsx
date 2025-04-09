@@ -111,7 +111,7 @@ export default function CheckoutPage() {
                 <h2 className="text-xl font-bold text-black">Shipping Address</h2>
                 <button
                   onClick={() => {}}
-                  className="text-black font-medium hover:text-gray-700 transition-colors"
+                  className="text-black font-medium hover:text-gray-700 transition-colors underline"
                 >
                   Change
                 </button>

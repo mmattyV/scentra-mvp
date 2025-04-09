@@ -34,13 +34,22 @@ export default function Header() {
       <nav className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-8">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
+          <Link href="/" className="flex-shrink-0 h-[40px] flex items-center">
             <Image
               src="/Scentra.svg"
               alt="Scentra Logo"
               width={120}
               height={59}
               priority
+              className="hidden md:block h-full w-auto" // Hide on mobile, show on medium and up
+            />
+            <Image
+              src="/Scentra-cropped.svg"
+              alt="Scentra Logo"
+              width={35}
+              height={35}
+              priority
+              className="block md:hidden h-[35px] w-auto" // Show on mobile, hide on medium and up
             />
           </Link>
 
@@ -50,7 +59,7 @@ export default function Header() {
               <input
                 type="text"
                 placeholder="Search product or brand"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-500 placeholder-gray-500"
+                className="w-full px-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-500 placeholder-gray-500 text-gray-800 text-ellipsis"
               />
               <button className="absolute right-3 top-1/2 -translate-y-1/2">
                 <svg
