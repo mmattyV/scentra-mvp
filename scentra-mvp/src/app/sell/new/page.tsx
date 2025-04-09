@@ -130,7 +130,7 @@ export default function NewListingPage() {
         <div className="text-center">
           <button
             onClick={() => setShowTerms(true)}
-            className="font-bold text-gray-700 hover:text-black transition-colors"
+            className="font-bold text-gray-700 hover:text-black transition-colors underline"
           >
             Terms and conditions of selling
           </button>

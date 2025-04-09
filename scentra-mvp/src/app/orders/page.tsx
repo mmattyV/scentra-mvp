@@ -78,9 +78,9 @@ export default function PastOrdersPage() {
         {/* Orders List */}
         <div className="space-y-4 mb-12">
           {SAMPLE_ORDERS.map((item) => (
-            <div key={item.id} className="flex items-center gap-6 p-6 bg-white border rounded-lg shadow-sm">
+            <div key={item.id} className="flex items-center p-4 sm:p-6 bg-white border rounded-lg shadow-sm">
               {/* Image */}
-              <div className="relative w-24 h-24">
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
                 <Image
                   src={item.image}
                   alt={item.name}
@@ -90,23 +90,27 @@ export default function PastOrdersPage() {
               </div>
 
               {/* Product Info */}
-              <div className="flex-grow">
-                <h3 className="text-lg font-medium text-black">{item.name}</h3>
+              <div className="flex-grow min-w-0 ml-4 sm:ml-6">
+                <h3 className="text-base sm:text-lg font-medium text-black truncate">{item.name}</h3>
                 <p className="text-sm text-gray-600">{item.brand}</p>
-                <p className="text-sm text-gray-500 mt-1">Product ID: {item.productId}</p>
-                <p className="text-sm text-gray-500">Ordered: {new Date(item.orderDate).toLocaleDateString()}</p>
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-y-1 sm:gap-x-4 text-sm text-gray-500 mt-1">
+                  <p>Product ID: {item.productId}</p>
+                  <p>Ordered: {new Date(item.orderDate).toLocaleDateString()}</p>
+                </div>
               </div>
+              
+              <div className="flex flex-col items-end gap-3 ml-4 sm:ml-6 flex-shrink-0">
+                {/* Price */}
+                <div className="text-base sm:text-lg font-medium text-gray-700">
+                  ${item.pricePaid}
+                </div>
 
-              {/* Price */}
-              <div className="text-lg font-medium text-gray-700">
-                ${item.pricePaid}
-              </div>
-
-              {/* Status */}
-              <div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[item.status]}`}>
-                  {STATUS_LABELS[item.status]}
-                </span>
+                {/* Status */}
+                <div>
+                  <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap ${STATUS_COLORS[item.status]}`}>
+                    {STATUS_LABELS[item.status]}
+                  </span>
+                </div>
               </div>
             </div>
           ))}
