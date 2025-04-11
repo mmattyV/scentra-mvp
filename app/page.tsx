@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthenticator } from "@aws-amplify/ui-react";
 import { useState, useEffect } from "react";
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "@/amplify/data/resource";
@@ -13,6 +14,7 @@ const client = generateClient<Schema>();
 
 export default function App() {
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
+  const { signOut } = useAuthenticator();
 
   function listTodos() {
     client.models.Todo.observeQuery().subscribe({
@@ -30,6 +32,10 @@ export default function App() {
     });
   }
 
+  function deleteTodo(id: string) {
+    client.models.Todo.delete({ id })
+  }
+
   return (
     <main className="flex flex-col items-stretch">
       <h1 className="text-xl font-bold">My todos</h1>
@@ -44,7 +50,7 @@ export default function App() {
       </button>
       <ul className="p-0 my-2 list-none flex flex-col border border-black gap-px bg-black rounded-lg overflow-auto">
         {todos.map((todo) => (
-          <li key={todo.id} className="bg-white p-2 hover:bg-indigo-100">{todo.content}</li>
+          <li onClick={() => deleteTodo(todo.id)} key={todo.id} className="bg-white p-2 hover:bg-indigo-100">{todo.content}</li>
         ))}
       </ul>
       <div className="mt-4">
@@ -57,6 +63,7 @@ export default function App() {
           Review next steps of this tutorial.
         </a>
       </div>
+      <button onClick={signOut}>Sign out</button>
     </main>
   );
 }
