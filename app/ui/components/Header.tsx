@@ -2,14 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 
 export default function Header() {
   const [isSellMenuOpen, setIsSellMenuOpen] = useState(false);
   const [isBuyerMenuOpen, setIsBuyerMenuOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0); // This will be connected to backend later
-  const router = useRouter();
+  const [cartCount] = useState(0); // This will be connected to backend later
 
   const sellMenuRef = useRef<HTMLDivElement>(null);
   const buyerMenuRef = useRef<HTMLDivElement>(null);

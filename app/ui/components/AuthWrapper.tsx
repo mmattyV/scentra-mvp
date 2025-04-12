@@ -2,8 +2,7 @@
 
 import { Authenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-
-type FormData = Record<string, any>;
+import React from "react";
 
 export default function AuthWrapper({
   children,
@@ -47,13 +46,13 @@ export default function AuthWrapper({
         },
       }}
       services={{
-        async validateCustomSignUp(formData: FormData) {
+        async validateCustomSignUp() {
           // No validation needed for optional fields
           return {};
         },
       }}
     >
-      {children}
+      {() => <React.Fragment>{children}</React.Fragment>}
     </Authenticator>
   );
 }

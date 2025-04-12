@@ -1,12 +1,13 @@
 "use client";
 
 import { useAuthenticator } from "@aws-amplify/ui-react";
-import { generateClient } from "aws-amplify/data";
-import type { Schema } from "@/amplify/data/resource";
 import { Amplify } from "aws-amplify";
 import "@aws-amplify/ui-react/styles.css";
 import Image from "next/image";
 import Link from "next/link";
+import outputs from "@/amplify_outputs.json";
+
+Amplify.configure(outputs);
 
 const SAMPLE_FRAGRANCES = [
   {
@@ -68,24 +69,9 @@ const SAMPLE_FRAGRANCES = [
   },
 ];
 
-// Safely initialize Amplify configuration
-try {
-  // This dynamic import is used to handle the case when the file doesn't exist
-  // during build time but will be generated during runtime
-  const outputs = require("@/amplify_outputs.json");
-  Amplify.configure(outputs);
-} catch (error) {
-  console.warn(
-    "Unable to load Amplify outputs, authentication features may not work correctly"
-  );
-  // Provide fallback configuration or leave unconfigured
-}
-
-const client = generateClient<Schema>();
-
 export default function App() {
-  const { signOut, user } = useAuthenticator();
-
+  const { signOut } = useAuthenticator();
+  
   return (
     <div className="min-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
