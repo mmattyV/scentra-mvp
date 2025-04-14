@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import AuthWrapper from "./ui/components/AuthWrapper";
+import { Authenticator } from "@aws-amplify/ui-react";
 import Footer from "./ui/components/Footer";
 import { openSans } from "./ui/fonts";
 import Header from "./ui/components/Header";
+import AuthenticatorProvider from "./ui/components/AuthenticatorProvider";
 
 export const metadata: Metadata = {
   title: "Scentra - Luxury Fragrance Marketplace",
@@ -20,17 +21,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body
-        suppressHydrationWarning={true}
-        className={`${openSans.className} min-h-screen flex flex-col`}
-      >
-        <Header />
-        <main className="flex-grow">
-          <AuthWrapper>{children}</AuthWrapper>
-        </main>
-        <Footer />
-      </body>
-    </html>
+    <AuthenticatorProvider>
+      <html lang="en">
+        <body
+          suppressHydrationWarning={true}
+          className={`${openSans.className} min-h-screen flex flex-col`}
+        >
+          <Header />
+          <main className="flex-grow">{children}</main>
+          <Footer />
+        </body>
+      </html>
+    </AuthenticatorProvider>
   );
 }

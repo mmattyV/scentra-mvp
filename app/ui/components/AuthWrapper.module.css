@@ -1,0 +1,90 @@
+/* Custom styles for the AWS Amplify Authenticator */
+.authContainer {
+  /* Black and white theme */
+  --amplify-components-button-primary-background-color: #000000;
+  --amplify-components-button-primary-hover-background-color: #333333;
+  --amplify-components-button-font-weight: 500;
+  --amplify-components-fieldcontrol-border-radius: 4px;
+  --amplify-components-fieldcontrol-focus-box-shadow: 0 0 0 2px #666666;
+  --amplify-components-tabs-item-active-border-color: #000000;
+  --amplify-components-tabs-item-active-color: #000000;
+  --amplify-components-tabs-item-color: #666666;
+  --amplify-components-tabs-item-hover-color: #333333;
+  --amplify-components-authenticator-router-border-radius: 0px;
+  --amplify-components-button-link-color: #333333;
+  --amplify-components-button-link-hover-color: #000000;
+  --amplify-colors-brand-primary-10: #f5f5f5;
+  --amplify-colors-brand-primary-20: #e5e5e5;
+  --amplify-colors-brand-primary-40: #cccccc;
+  --amplify-colors-brand-primary-60: #999999;
+  --amplify-colors-brand-primary-80: #666666;
+  --amplify-colors-brand-primary-90: #333333;
+  --amplify-colors-brand-primary-100: #000000;
+  --amplify-colors-font-interactive: #000000;
+  --amplify-colors-font-hover: #333333;
+  --amplify-components-button-link-focus-color: #333333;
+  --amplify-components-fieldcontrol-focus-border-color: #333333;
+  --amplify-components-button-link-active-color: #000000;
+  --amplify-components-button-primary-focus-background-color: #333333;
+  --amplify-components-button-primary-active-background-color: #000000;
+  
+  /* Position the form toward the top of the page */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  width: 100%;
+  padding-top: 5rem;
+  margin: 0;
+  background-color: #ffffff;
+}
+
+/* Remove borders and shadows from the auth router */
+.authContainer :global(.amplify-authenticator__router) {
+  box-shadow: none !important;
+  border: none !important;
+  background-color: transparent !important;
+  max-width: 400px;
+  width: 100%;
+}
+
+/* Style the form */
+.authContainer :global(.amplify-authenticator__form) {
+  padding: 1rem !important;
+}
+
+/* Remove extra padding on form container */
+.authContainer > div {
+  padding: 0;
+  width: 100%;
+}
+
+/* Override focus and active states to be monochrome */
+.authContainer :global(.amplify-button:focus), 
+.authContainer :global(.amplify-field-control:focus),
+.authContainer :global(.amplify-input:focus) {
+  border-color: #333333 !important;
+  box-shadow: 0 0 0 2px #666666 !important;
+}
+
+/* Override link highlights */
+.authContainer :global(.amplify-text--interactive:hover) {
+  color: #333333 !important;
+}
+
+/* Override button active states */
+.authContainer :global(.amplify-button:active) {
+  background-color: #333333 !important;
+}
+
+/* Override checkbox styles */
+.authContainer :global(.amplify-checkbox:checked) {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+/* Override selection color */
+.authContainer :global(::selection) {
+  background-color: #cccccc !important;
+  color: #000000 !important;
+}
