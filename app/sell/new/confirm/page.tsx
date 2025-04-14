@@ -1,14 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Header from '@/app/ui/components/Header';
 
 export default function ListingConfirmPage() {
   const router = useRouter();
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
       
       <main className="container mx-auto px-4 py-16">
         <div className="max-w-md mx-auto text-center">

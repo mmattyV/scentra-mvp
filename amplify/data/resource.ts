@@ -24,6 +24,7 @@ const schema = a.schema({
       percentRemaining: a.integer(), // Only applies if condition is "used"
       askingPrice: a.float().required(),
       status: a.string().default("active"), // "active", "sold", "removed"
+      imageKey: a.string().required(), // S3 key for the image in Amplify Storage
       createdAt: a.datetime().required(),
     })
     .authorization((allow) => [allow.publicApiKey(), allow.authenticated()]),

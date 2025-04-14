@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthenticator } from "@aws-amplify/ui-react";
 import { generateClient } from "aws-amplify/data";
+import { uploadData } from "aws-amplify/storage";
 import type { Schema } from "@/amplify/data/resource";
-import Header from '@/app/ui/components/Header';
+import Image from 'next/image';
 
 // Static list of fragrances for MVP, each with a unique productId
 const FRAGRANCES = [
@@ -20,6 +21,11 @@ const FRAGRANCES = [
   { productId: 'frag-009', name: 'Light Blue', brand: 'Dolce & Gabbana' },
   { productId: 'frag-010', name: 'Black Opium', brand: 'Yves Saint Laurent' },
 ];
+
+// Maximum image dimensions for compression
+const MAX_IMAGE_WIDTH = 1200;
+const MAX_IMAGE_HEIGHT = 1200;
+const IMAGE_QUALITY = 0.7; // JPEG compression quality (0-1)
 
 export default function NewListingPage() {
   const router = useRouter();
@@ -37,11 +43,115 @@ export default function NewListingPage() {
     fragranceId?: string;
     bottleSize?: string;
     askingPrice?: string;
+    image?: string;
   }>({});
 
+  // Image handling state
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Compress the image using canvas
+  const compressImage = async (file: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      setIsCompressing(true);
+      // Create HTML Image element with proper typings
+      const img: HTMLImageElement = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      
+      img.onload = () => {
+        // Calculate new dimensions while maintaining aspect ratio
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > MAX_IMAGE_WIDTH) {
+          height = (MAX_IMAGE_WIDTH / width) * height;
+          width = MAX_IMAGE_WIDTH;
+        }
+        
+        if (height > MAX_IMAGE_HEIGHT) {
+          width = (MAX_IMAGE_HEIGHT / height) * width;
+          height = MAX_IMAGE_HEIGHT;
+        }
+        
+        // Create canvas and draw resized image
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          setIsCompressing(false);
+          reject(new Error('Unable to get canvas context'));
+          return;
+        }
+        
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to blob with compression
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              setIsCompressing(false);
+              resolve(blob);
+            } else {
+              setIsCompressing(false);
+              reject(new Error('Canvas to Blob conversion failed'));
+            }
+          },
+          'image/jpeg',
+          IMAGE_QUALITY
+        );
+      };
+      
+      img.onerror = () => {
+        setIsCompressing(false);
+        reject(new Error('Image loading failed'));
+      };
+    });
+  };
+
+  // Handle image selection
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      try {
+        const file = files[0];
+        
+        // Only accept images
+        if (!file.type.startsWith('image/')) {
+          setValidationErrors(prev => ({ ...prev, image: 'Please select a valid image file' }));
+          return;
+        }
+        
+        setSelectedImage(file);
+        setImagePreview(URL.createObjectURL(file));
+        // Clear the image validation error
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.image;
+          return newErrors;
+        });
+      } catch (error) {
+        console.error('Error handling image:', error);
+        setValidationErrors(prev => ({ ...prev, image: 'Error processing image' }));
+      }
+    }
+  };
+
+  // Remove selected image
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const validateBottleSize = (value: string): boolean => {
     // Allow only numbers followed by ml or oz, with optional spaces
@@ -54,6 +164,7 @@ export default function NewListingPage() {
       fragranceId?: string;
       bottleSize?: string;
       askingPrice?: string;
+      image?: string;
     } = {};
 
     if (!fragranceId) {
@@ -71,6 +182,10 @@ export default function NewListingPage() {
     } else if (isNaN(parseFloat(askingPrice)) || parseFloat(askingPrice) <= 0) {
       errors.askingPrice = 'Please enter a valid price';
     }
+    
+    if (!selectedImage) {
+      errors.image = 'Please upload a product image';
+    }
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -79,14 +194,31 @@ export default function NewListingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!validateForm() || !selectedImage) return;
     
     try {
       setIsSubmitting(true);
       
-      const client = generateClient<Schema>();
+      // 1. Compress the image
+      const compressedImage = await compressImage(selectedImage);
       
-      // Create new listing
+      // 2. Generate a unique filename
+      const timestamp = new Date().getTime();
+      const fileExtension = selectedImage.name.split('.').pop() || 'jpg';
+      const fileName = `listings/${user.userId}/${timestamp}-${fragranceId}.${fileExtension}`;
+      
+      // 3. Upload to S3
+      const { result } = await uploadData({
+        key: fileName,
+        data: compressedImage,
+        options: {
+          contentType: `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`,
+          accessLevel: 'guest', // Public read access for listing images
+        }
+      });
+      
+      // 4. Create the listing with the image key
+      const client = generateClient<Schema>();
       await client.models.Listing.create({
         sellerId: user.userId,
         fragranceId,
@@ -94,6 +226,7 @@ export default function NewListingPage() {
         condition,
         percentRemaining: condition === 'used' ? percentRemaining : undefined,
         askingPrice: parseFloat(askingPrice),
+        imageKey: fileName, // Store S3 key reference
         createdAt: new Date().toISOString(),
       });
       
@@ -102,7 +235,6 @@ export default function NewListingPage() {
     } catch (error) {
       console.error('Error creating listing:', error);
       alert('Failed to create listing. Please try again.');
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -217,6 +349,80 @@ export default function NewListingPage() {
               </div>
             )}
             
+            {/* Image Upload */}
+            <div className="space-y-2">
+              <label htmlFor="productImage" className="block text-sm font-medium text-gray-700">
+                Product Image
+              </label>
+              <div 
+                className={`border-2 border-dashed rounded-lg p-4 ${
+                  validationErrors.image ? 'border-red-500' : 'border-gray-300'
+                }`}
+              >
+                {!imagePreview ? (
+                  <div className="text-center py-6">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Upload a high-quality photo of your product
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      id="productImage"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="mt-2 px-4 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none"
+                    >
+                      Select Image
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div className="relative h-64 w-full overflow-hidden rounded-lg">
+                      <Image
+                        src={imagePreview}
+                        alt="Product preview"
+                        fill
+                        style={{ objectFit: 'contain' }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 p-1 bg-gray-100 rounded-full shadow"
+                    >
+                      <svg className="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+              {validationErrors.image && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.image}</p>
+              )}
+              {isCompressing && (
+                <p className="text-blue-500 text-sm mt-1">Compressing image...</p>
+              )}
+            </div>
+            
             {/* Asking Price */}
             <div className="space-y-2">
               <label htmlFor="askingPrice" className="block text-sm font-medium text-gray-700">
@@ -248,9 +454,9 @@ export default function NewListingPage() {
             <div className="pt-4">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isCompressing}
                 className={`w-full py-3 px-4 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors ${
-                  isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                  (isSubmitting || isCompressing) ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >
                 {isSubmitting ? 'Creating Listing...' : 'Create Listing'}
