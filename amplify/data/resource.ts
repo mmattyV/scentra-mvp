@@ -1,12 +1,33 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 
 /*== STEP 1 ===============================================================
-The section below creates a Todo database table with a "content" field. Try
-adding a new "isDone" field as a boolean. The authorization rule below
-specifies that any user authenticated via an API key can "create", "read",
-"update", and "delete" any "Todo" records.
+The section below defines the data models for our Scentra marketplace
+application, including Fragrances, Listings, and Users.
 =========================================================================*/
 const schema = a.schema({
+  Fragrance: a
+    .model({
+      productId: a.string().required(), // Unique identifier for the fragrance
+      name: a.string().required(),
+      brand: a.string().required(),
+      description: a.string(),
+      category: a.string(),
+    })
+    .authorization((allow) => [allow.publicApiKey(), allow.authenticated()]),
+
+  Listing: a
+    .model({
+      sellerId: a.string().required(),
+      fragranceId: a.string().required(), // References productId in Fragrance model
+      bottleSize: a.string().required(),
+      condition: a.string().required(), // "new" or "used" 
+      percentRemaining: a.integer(), // Only applies if condition is "used"
+      askingPrice: a.float().required(),
+      status: a.string().default("active"), // "active", "sold", "removed"
+      createdAt: a.datetime().required(),
+    })
+    .authorization((allow) => [allow.publicApiKey(), allow.authenticated()]),
+
   Todo: a
     .model({
       content: a.string(),
