@@ -10,7 +10,7 @@ export default function Header() {
   const [isSellMenuOpen, setIsSellMenuOpen] = useState(false);
   const [isBuyerMenuOpen, setIsBuyerMenuOpen] = useState(false);
   const [cartCount] = useState(0); // This will be connected to backend later
-  const { authStatus } = useAuthenticator(context => [context.authStatus]);
+  const { authStatus, signOut } = useAuthenticator(context => [context.authStatus]);
 
   const sellMenuRef = useRef<HTMLDivElement>(null);
   const buyerMenuRef = useRef<HTMLDivElement>(null);
@@ -272,6 +272,51 @@ export default function Header() {
                 </ProtectedLink>
               )}
             </div>
+
+            {/* Authentication Button - Rightmost with black box */}
+            {authStatus === "authenticated" ? (
+              <button
+                onClick={signOut}
+                className="text-sm font-medium text-white bg-black flex items-center justify-center px-4 py-2 rounded-md transition duration-200 hover:bg-gray-800 min-w-[110px] whitespace-nowrap h-[40px]"
+              >
+                <svg
+                  className="w-5 h-5 mr-1 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                Sign Out
+              </button>
+            ) : (
+              <Link
+                href="/auth"
+                className="text-sm font-medium text-white bg-black flex items-center justify-center px-4 py-2 rounded-md transition duration-200 hover:bg-gray-800 min-w-[110px] whitespace-nowrap h-[40px]"
+              >
+                <svg
+                  className="w-5 h-5 mr-1 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                  />
+                </svg>
+                Log In
+              </Link>
+            )}
           </div>
         </div>
       </nav>

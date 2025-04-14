@@ -102,12 +102,6 @@ export default function App() {
             </Link>
           ))}
         </div>
-        <button
-          onClick={signOut}
-          className="mt-6 rounded-lg border border-transparent px-5 py-2.5 text-base font-medium bg-red-600 hover:bg-red-700 cursor-pointer transition-colors text-white"
-        >
-          Sign out
-        </button>
       </main>
     </div>
   );
