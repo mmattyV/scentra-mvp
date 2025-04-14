@@ -5,12 +5,14 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import ProtectedLink from "./ProtectedLink";
 import { useAuthenticator } from "@aws-amplify/ui-react";
+import { fetchAuthSession, fetchUserAttributes } from "aws-amplify/auth";
 
 export default function Header() {
   const [isSellMenuOpen, setIsSellMenuOpen] = useState(false);
   const [isBuyerMenuOpen, setIsBuyerMenuOpen] = useState(false);
   const [cartCount] = useState(0); // This will be connected to backend later
-  const { authStatus, signOut } = useAuthenticator(context => [context.authStatus]);
+  const [userName, setUserName] = useState<string>('');
+  const { authStatus, signOut, user } = useAuthenticator(context => [context.authStatus, context.user]);
 
   const sellMenuRef = useRef<HTMLDivElement>(null);
   const buyerMenuRef = useRef<HTMLDivElement>(null);
@@ -35,6 +37,27 @@ export default function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Fetch user attributes when authenticated
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (authStatus === "authenticated") {
+        try {
+          const attributes = await fetchUserAttributes();
+          const firstName = attributes.given_name || 
+                           attributes.name || 
+                           user?.username?.split('@')[0] || 
+                           'there';
+          setUserName(firstName);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          setUserName('there');
+        }
+      }
+    };
+    
+    fetchUserData();
+  }, [authStatus, user]);
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
@@ -272,6 +295,13 @@ export default function Header() {
                 </ProtectedLink>
               )}
             </div>
+
+            {/* Hello User Message */}
+            {authStatus === "authenticated" && (
+              <div className="text-sm font-medium text-gray-700">
+                Hello {userName}!
+              </div>
+            )}
 
             {/* Authentication Button - Rightmost with black box */}
             {authStatus === "authenticated" ? (
