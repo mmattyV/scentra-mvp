@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthenticator } from "@aws-amplify/ui-react";
 import { generateClient } from "aws-amplify/data";
-import { uploadData } from "aws-amplify/storage";
+import { fetchAuthSession } from 'aws-amplify/auth';
+import { uploadData, getUrl } from "aws-amplify/storage";
 import type { Schema } from "@/amplify/data/resource";
 import Image from 'next/image';
 
@@ -21,11 +22,6 @@ const FRAGRANCES = [
   { productId: 'frag-009', name: 'Light Blue', brand: 'Dolce & Gabbana' },
   { productId: 'frag-010', name: 'Black Opium', brand: 'Yves Saint Laurent' },
 ];
-
-// Maximum image dimensions for compression
-const MAX_IMAGE_WIDTH = 1200;
-const MAX_IMAGE_HEIGHT = 1200;
-const IMAGE_QUALITY = 0.7; // JPEG compression quality (0-1)
 
 export default function NewListingPage() {
   const router = useRouter();
@@ -49,72 +45,11 @@ export default function NewListingPage() {
   // Image handling state
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isCompressing, setIsCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  // Compress the image using canvas
-  const compressImage = async (file: File): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-      setIsCompressing(true);
-      // Create HTML Image element with proper typings
-      const img: HTMLImageElement = document.createElement('img');
-      img.src = URL.createObjectURL(file);
-      
-      img.onload = () => {
-        // Calculate new dimensions while maintaining aspect ratio
-        let width = img.width;
-        let height = img.height;
-        
-        if (width > MAX_IMAGE_WIDTH) {
-          height = (MAX_IMAGE_WIDTH / width) * height;
-          width = MAX_IMAGE_WIDTH;
-        }
-        
-        if (height > MAX_IMAGE_HEIGHT) {
-          width = (MAX_IMAGE_HEIGHT / height) * width;
-          height = MAX_IMAGE_HEIGHT;
-        }
-        
-        // Create canvas and draw resized image
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        
-        if (!ctx) {
-          setIsCompressing(false);
-          reject(new Error('Unable to get canvas context'));
-          return;
-        }
-        
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        // Convert to blob with compression
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              setIsCompressing(false);
-              resolve(blob);
-            } else {
-              setIsCompressing(false);
-              reject(new Error('Canvas to Blob conversion failed'));
-            }
-          },
-          'image/jpeg',
-          IMAGE_QUALITY
-        );
-      };
-      
-      img.onerror = () => {
-        setIsCompressing(false);
-        reject(new Error('Image loading failed'));
-      };
-    });
-  };
 
   // Handle image selection
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,25 +134,71 @@ export default function NewListingPage() {
     try {
       setIsSubmitting(true);
       
-      // 1. Compress the image
-      const compressedImage = await compressImage(selectedImage);
-      
-      // 2. Generate a unique filename
+      // Generate a unique path for the image
       const timestamp = new Date().getTime();
       const fileExtension = selectedImage.name.split('.').pop() || 'jpg';
-      const fileName = `listings/${user.userId}/${timestamp}-${fragranceId}.${fileExtension}`;
+      const imagePath = `listings/${fragranceId}/${timestamp}-frag.${fileExtension}`;
       
-      // 3. Upload to S3
-      const { result } = await uploadData({
-        key: fileName,
-        data: compressedImage,
-        options: {
-          contentType: `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`,
-          accessLevel: 'guest', // Public read access for listing images
-        }
+      // Use FileReader to convert the file to an ArrayBuffer
+      const uploadPromise = new Promise<string>((resolve, reject) => {
+        const fileReader = new FileReader();
+        fileReader.readAsArrayBuffer(selectedImage);
+        
+        fileReader.onload = async (event) => {
+          try {
+            if (!event.target?.result) {
+              throw new Error('Failed to read file');
+            }
+            
+            console.log("File read successfully!");
+            
+            // Upload the file using the ArrayBuffer
+            const result = await uploadData({
+              data: event.target.result,
+              key: imagePath,
+            }).result;
+            
+            console.log("Upload successful:", result.key);
+            
+            // DEBUG: Get and log the public URL of the uploaded image
+            try {
+              const urlResult = await getUrl({
+                key: result.key,
+              });
+              console.log("Image public URL:", urlResult.url.toString());
+            } catch (urlError) {
+              console.error("Error getting image URL:", urlError);
+            }
+            
+            resolve(result.key);
+          } catch (error) {
+            console.error("Upload error:", error);
+            reject(error);
+          }
+        };
+        
+        fileReader.onerror = (error) => {
+          console.error("FileReader error:", error);
+          reject(error);
+        };
       });
       
-      // 4. Create the listing with the image key
+      // Wait for the upload to complete
+      const imageKey = await uploadPromise;
+      
+      // Optional: Log the successful upload
+      await fetch('/api/log', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          success: true,
+          key: imageKey
+        }),
+      });
+      
+      // Create the listing with the image key
       const client = generateClient<Schema>();
       await client.models.Listing.create({
         sellerId: user.userId,
@@ -226,7 +207,7 @@ export default function NewListingPage() {
         condition,
         percentRemaining: condition === 'used' ? percentRemaining : undefined,
         askingPrice: parseFloat(askingPrice),
-        imageKey: fileName, // Store S3 key reference
+        imageKey: imageKey,
         createdAt: new Date().toISOString(),
       });
       
@@ -418,9 +399,6 @@ export default function NewListingPage() {
               {validationErrors.image && (
                 <p className="text-red-500 text-sm mt-1">{validationErrors.image}</p>
               )}
-              {isCompressing && (
-                <p className="text-blue-500 text-sm mt-1">Compressing image...</p>
-              )}
             </div>
             
             {/* Asking Price */}
@@ -454,9 +432,9 @@ export default function NewListingPage() {
             <div className="pt-4">
               <button
                 type="submit"
-                disabled={isSubmitting || isCompressing}
+                disabled={isSubmitting}
                 className={`w-full py-3 px-4 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors ${
-                  (isSubmitting || isCompressing) ? 'opacity-70 cursor-not-allowed' : ''
+                  isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >
                 {isSubmitting ? 'Creating Listing...' : 'Create Listing'}
