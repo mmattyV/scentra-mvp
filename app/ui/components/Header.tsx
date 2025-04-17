@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import ProtectedLink from "./ProtectedLink";
 import { useAuthenticator } from "@aws-amplify/ui-react";
-import { fetchAuthSession, fetchUserAttributes } from "aws-amplify/auth";
+import { fetchUserAttributes } from "aws-amplify/auth";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const [isSellMenuOpen, setIsSellMenuOpen] = useState(false);
@@ -13,6 +14,7 @@ export default function Header() {
   const [cartCount] = useState(0); // This will be connected to backend later
   const [userName, setUserName] = useState<string>('');
   const { authStatus, signOut, user } = useAuthenticator(context => [context.authStatus, context.user]);
+  const router = useRouter();
 
   const sellMenuRef = useRef<HTMLDivElement>(null);
   const buyerMenuRef = useRef<HTMLDivElement>(null);
@@ -306,7 +308,10 @@ export default function Header() {
             {/* Authentication Button - Rightmost with black box */}
             {authStatus === "authenticated" ? (
               <button
-                onClick={signOut}
+                onClick={() => {
+                  signOut();
+                  router.push('/auth');
+                }}
                 className="text-sm font-medium text-white bg-black flex items-center justify-center px-4 py-2 rounded-md transition duration-200 hover:bg-gray-800 min-w-[110px] whitespace-nowrap h-[40px]"
               >
                 <svg

@@ -7,7 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import outputs from "@/amplify_outputs.json";
 
-Amplify.configure(outputs);
+// Amplify is now configured at the root level in AuthenticatorProvider
 
 const SAMPLE_FRAGRANCES = [
   {

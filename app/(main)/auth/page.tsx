@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthenticator } from "@aws-amplify/ui-react";
-import AuthWrapper from "../ui/components/AuthWrapper";
+import AuthWrapper from "@/app/ui/components/AuthWrapper";
 
 export default function AuthPage() {
   const router = useRouter();

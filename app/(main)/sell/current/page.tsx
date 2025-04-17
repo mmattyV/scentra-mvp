@@ -7,6 +7,7 @@ import { useAuthenticator } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
 import { FRAGRANCES } from '@/app/utils/fragrance-data';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 interface Listing {
   id: string;
@@ -28,6 +29,7 @@ export default function CurrentListingsPage() {
   const [isClient, setIsClient] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [isAuthReady, setIsAuthReady] = useState(false);
   
   // For price editing
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -37,20 +39,45 @@ export default function CurrentListingsPage() {
   // For deletion
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
+  // Handle client-side rendering
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  // Add an explicit auth check effect
   useEffect(() => {
-    if (isClient && user) {
+    const checkAuthStatus = async () => {
+      if (!isClient) return;
+      
+      try {
+        // This will force Amplify to check storage for auth state
+        await fetchAuthSession();
+        setIsAuthReady(true);
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        setIsAuthReady(true); // Still set to true so we don't block rendering
+      }
+    };
+    
+    checkAuthStatus();
+  }, [isClient]);
+
+  useEffect(() => {
+    if (isClient && isAuthReady && user) {
       fetchListings();
+    } else if (isClient && isAuthReady && !user) {
+      // If authentication check completed but no user found
+      setIsLoading(false);
+      setError('Authentication required. Please sign in to view your listings.');
     }
-  }, [isClient, user]);
+  }, [isClient, isAuthReady, user]);
 
   const fetchListings = async () => {
     try {
       setIsLoading(true);
-      const client = generateClient<Schema>();
+      const client = generateClient<Schema>({
+        authMode: 'userPool' // Explicitly use Cognito User Pool for auth
+      });
       
       // Make sure user is defined before proceeding
       if (!user?.userId) {
@@ -99,7 +126,7 @@ export default function CurrentListingsPage() {
           
           try {
             const result = await getUrl({
-              key: listing.imageKey,
+              path: listing.imageKey,
             });
             urls[listing.id] = result.url.toString();
           } catch (error) {
@@ -138,7 +165,9 @@ export default function CurrentListingsPage() {
 
     try {
       setIsPriceUpdating(true);
-      const client = generateClient<Schema>();
+      const client = generateClient<Schema>({
+        authMode: 'userPool' // Explicitly use Cognito User Pool for auth
+      });
       
       await client.models.Listing.update({
         id: listingId,
@@ -182,7 +211,9 @@ export default function CurrentListingsPage() {
     }
     
     try {
-      const client = generateClient<Schema>();
+      const client = generateClient<Schema>({
+        authMode: 'userPool' // Explicitly use Cognito User Pool for auth
+      });
       
       // Update the listing status to 'removed'
       await client.models.Listing.update({

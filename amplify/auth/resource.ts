@@ -1,4 +1,5 @@
 import { defineAuth } from "@aws-amplify/backend";
+import { getUserAttributes } from "../data/get-user-attributes/resource";
 
 /**
  * Define and configure your auth resource
@@ -25,4 +26,12 @@ export const auth = defineAuth({
       required: false,
     },
   },
+  
+  // Define admin group for user management
+  groups: ["ADMINS"],
+  
+  // Grant specific permissions to our function to access user data
+  access: (allow) => [
+    allow.resource(getUserAttributes).to(["getUser", "listUsers"])
+  ]
 });

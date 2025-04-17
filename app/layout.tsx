@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Authenticator } from "@aws-amplify/ui-react";
-import Footer from "./ui/components/Footer";
 import { openSans } from "./ui/fonts";
-import Header from "./ui/components/Header";
 import AuthenticatorProvider from "./ui/components/AuthenticatorProvider";
 
 export const metadata: Metadata = {
@@ -27,9 +24,7 @@ export default function RootLayout({
           suppressHydrationWarning={true}
           className={`${openSans.className} min-h-screen flex flex-col`}
         >
-          <Header />
-          <main className="flex-grow">{children}</main>
-          <Footer />
+          {children}
         </body>
       </html>
     </AuthenticatorProvider>

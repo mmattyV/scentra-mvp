@@ -4,10 +4,11 @@ import { defineStorage } from '@aws-amplify/backend';
 export const storage = defineStorage({
   name: 'scentraStorage',
   access: (allow) => ({
-    // Grant authenticated users full access to the entire bucket
-    '*': [
-      allow.authenticated.to(['read', 'write', 'delete']),
-      allow.guest.to(['read'])
+    // Grant authenticated users access to their own files, admin access to all files
+    'listings/*': [
+      allow.groups(['ADMINS']).to(['read', 'write', 'delete']), // Admin access to all files
+      allow.authenticated.to(['read', 'write', 'delete']),      // Regular users
+      allow.guest.to(['read'])                                  // Guest read-only
     ]
   })
 });

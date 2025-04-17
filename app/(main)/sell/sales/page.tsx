@@ -6,6 +6,8 @@ import { useAuthenticator } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
 import { FRAGRANCES } from '@/app/utils/fragrance-data';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import { useRouter } from 'next/navigation';
 
 // Define the possible sale statuses
 type SaleStatus = 'unconfirmed' | 'shipping_to_scentra' | 'verifying' | 'shipping_to_buyer' | 'completed';
@@ -41,10 +43,12 @@ const STATUS_COLORS: Record<SaleStatus, string> = {
 };
 
 export default function SalesPage() {
+  const router = useRouter();
   const { user } = useAuthenticator((context) => [context.user]);
   const [sales, setSales] = useState<SaleItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   
@@ -56,20 +60,44 @@ export default function SalesPage() {
   const [showShippingInstructions, setShowShippingInstructions] = useState(false);
   const [confirmingItem, setConfirmingItem] = useState<SaleItem | null>(null);
 
+  // Client-side initialization
   useEffect(() => {
     setIsClient(true);
   }, []);
-
+  
+  // Add explicit auth check effect
   useEffect(() => {
-    if (isClient && user) {
+    const checkAuthStatus = async () => {
+      if (!isClient) return;
+      
+      try {
+        // This will force Amplify to check storage for auth state
+        await fetchAuthSession();
+        setIsAuthReady(true);
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        setIsAuthReady(true); // Still set to true so we don't block rendering
+      }
+    };
+    
+    checkAuthStatus();
+  }, [isClient]);
+  
+  useEffect(() => {
+    if (isClient && isAuthReady && user) {
       fetchSales();
+    } else if (isClient && isAuthReady && !user) {
+      setIsLoading(false);
+      setError('Authentication required. Please sign in to view your sales.');
     }
-  }, [isClient, user]);
+  }, [isClient, isAuthReady, user]);
 
   const fetchSales = async () => {
     try {
       setIsLoading(true);
-      const client = generateClient<Schema>();
+      const client = generateClient<Schema>({
+        authMode: 'userPool' // Explicitly use Cognito User Pool for auth
+      });
       
       // Make sure user is defined before proceeding
       if (!user?.userId) {
@@ -121,7 +149,7 @@ export default function SalesPage() {
           
           try {
             const result = await getUrl({
-              key: item.imageKey,
+              path: item.imageKey,
             });
             urls[item.id] = result.url.toString();
           } catch (error) {
@@ -148,7 +176,9 @@ export default function SalesPage() {
     
     try {
       setIsConfirming(true);
-      const client = generateClient<Schema>();
+      const client = generateClient<Schema>({
+        authMode: 'userPool' // Explicitly use Cognito User Pool for auth
+      });
       
       await client.models.Listing.update({
         id: confirmingItem.id,
@@ -190,9 +220,26 @@ export default function SalesPage() {
     };
   };
 
-  // Don't render on server to prevent hydration issues
-  if (!isClient) {
-    return null;
+  // Render redirect if no user after auth check is completed
+  if (isClient && isAuthReady && !user) {
+    router.push('/auth');
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <p className="text-lg mb-4">Please sign in to view your sales.</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-900 border-t-transparent mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Don't render content until client-side rendering and auth check are complete
+  if (!isClient || !isAuthReady) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-900 border-t-transparent"></div>
+      </div>
+    );
   }
 
   return (

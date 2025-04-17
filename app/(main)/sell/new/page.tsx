@@ -8,12 +8,18 @@ import { uploadData, getUrl } from "aws-amplify/storage";
 import type { Schema } from "@/amplify/data/resource";
 import Image from 'next/image';
 import { FRAGRANCES } from '@/app/utils/fragrance-data';
+import { Amplify } from 'aws-amplify';
+import outputs from "@/amplify_outputs.json";
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+// Amplify is now configured at the root level in AuthenticatorProvider
 
 export default function NewListingPage() {
   const router = useRouter();
   const { user } = useAuthenticator((context) => [context.user]);
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   
   // Form state
   const [fragranceId, setFragranceId] = useState('');
@@ -33,9 +39,50 @@ export default function NewListingPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Client-side initialization
   useEffect(() => {
     setIsClient(true);
   }, []);
+  
+  // Add explicit auth check effect
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      if (!isClient) return;
+      
+      try {
+        // This will force Amplify to check storage for auth state
+        await fetchAuthSession();
+        setIsAuthReady(true);
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        setIsAuthReady(true); // Still set to true so we don't block rendering
+      }
+    };
+    
+    checkAuthStatus();
+  }, [isClient]);
+
+  // Render redirect if no user after auth check is completed
+  if (isClient && isAuthReady && !user) {
+    router.push('/auth');
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <p className="text-lg mb-4">Please sign in to create a listing.</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-900 border-t-transparent mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Don't render content until client-side rendering and auth check are complete
+  if (!isClient || !isAuthReady) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-900 border-t-transparent"></div>
+      </div>
+    );
+  }
 
   // Handle image selection
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,7 +170,7 @@ export default function NewListingPage() {
       // Generate a unique path for the image
       const timestamp = new Date().getTime();
       const fileExtension = selectedImage.name.split('.').pop() || 'jpg';
-      const imagePath = `listings/${fragranceId}/${timestamp}-frag.${fileExtension}`;
+      const s3Path = `listings/${fragranceId}/${timestamp}-frag.${fileExtension}`;
       
       // Use FileReader to convert the file to an ArrayBuffer
       const uploadPromise = new Promise<string>((resolve, reject) => {
@@ -141,22 +188,22 @@ export default function NewListingPage() {
             // Upload the file using the ArrayBuffer
             const result = await uploadData({
               data: event.target.result,
-              key: imagePath,
-            }).result;
+              path: s3Path
+            });
             
-            console.log("Upload successful:", result.key);
+            console.log("Upload successful:", result);
             
             // DEBUG: Get and log the public URL of the uploaded image
             try {
               const urlResult = await getUrl({
-                key: result.key,
+                path: s3Path
               });
               console.log("Image public URL:", urlResult.url.toString());
             } catch (urlError) {
               console.error("Error getting image URL:", urlError);
             }
             
-            resolve(result.key);
+            resolve(s3Path);
           } catch (error) {
             console.error("Upload error:", error);
             reject(error);
@@ -184,8 +231,10 @@ export default function NewListingPage() {
         }),
       });
       
-      // Create the listing with the image key
-      const client = generateClient<Schema>();
+      // Create the listing with the image key - specify userPool auth mode
+      const client = generateClient<Schema>({
+        authMode: 'userPool' // Explicitly use Cognito User Pool for auth
+      });
       await client.models.Listing.create({
         sellerId: user.userId,
         fragranceId,
@@ -194,6 +243,7 @@ export default function NewListingPage() {
         percentRemaining: condition === 'used' ? percentRemaining : undefined,
         askingPrice: parseFloat(askingPrice),
         imageKey: imageKey,
+        status: 'active',
         createdAt: new Date().toISOString(),
       });
       
@@ -205,11 +255,6 @@ export default function NewListingPage() {
       setIsSubmitting(false);
     }
   };
-
-  // Don't render on server to prevent hydration issues
-  if (!isClient) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-white">
