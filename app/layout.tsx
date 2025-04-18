@@ -18,15 +18,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AuthenticatorProvider>
-      <html lang="en">
-        <body
-          suppressHydrationWarning={true}
-          className={`${openSans.className} min-h-screen flex flex-col`}
-        >
+    <html lang="en">
+      <body
+        suppressHydrationWarning={true}
+        className={`${openSans.className} min-h-screen flex flex-col`}
+      >
+        <AuthenticatorProvider>
           {children}
-        </body>
-      </html>
-    </AuthenticatorProvider>
+        </AuthenticatorProvider>
+      </body>
+    </html>
   );
 }

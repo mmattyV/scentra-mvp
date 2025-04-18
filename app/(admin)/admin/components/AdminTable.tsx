@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
+// need to put interfaces in same file
+// need to standardize status_colors and labels
+
 interface Listing {
   id: string;
   sellerId: string;

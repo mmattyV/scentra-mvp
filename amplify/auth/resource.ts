@@ -20,11 +20,6 @@ export const auth = defineAuth({
       required: true,
       mutable: true,
     },
-    // Maps to Cognito standard attribute 'address'
-    address: {
-      mutable: true,
-      required: false,
-    },
   },
   
   // Define admin group for user management

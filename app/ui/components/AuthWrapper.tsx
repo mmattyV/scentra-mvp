@@ -193,12 +193,6 @@ export default function AuthWrapper({
                 placeholder: 'Enter your last name',
                 isRequired: true,
               },
-              address: {
-                order: 6,
-                placeholder: 'Enter your address',
-                label: 'Address',
-                isRequired: false,
-              },
             },
           }}
           loginMechanisms={['email']}
