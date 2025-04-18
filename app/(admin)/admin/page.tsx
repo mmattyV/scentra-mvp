@@ -6,6 +6,7 @@ import { generateClient } from 'aws-amplify/data';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import { fetchUsersByIds } from '@/app/utils/admin-api-client';
 import { FRAGRANCES } from '@/app/utils/fragrance-data';
+import type { Listing, UserData } from '@/app/types';
 
 import AdminTable from './components/AdminTable';
 import StatusFilter from './components/StatusFilter';
@@ -35,35 +36,11 @@ const getValidStatusTransitions = (currentStatus: string): string[] => {
   }
 };
 
-interface Listing {
-  id: string;
-  sellerId: string;
-  fragranceId: string;
-  bottleSize: string;
-  condition: string;
-  percentRemaining?: number;
-  askingPrice: number;
-  status: string;
-  imageKey: string;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-interface User {
-  userId: string;
-  username: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  [key: string]: any;
-}
-
 export default function AdminDashboard() {
   const { user, authStatus } = useAuthenticator((context) => [context.user, context.authStatus]);
   const [isClient, setIsClient] = useState(false);
   const [listings, setListings] = useState<Listing[]>([]);
-  const [sellerInfo, setSellerInfo] = useState<Record<string, User>>({});
+  const [sellerInfo, setSellerInfo] = useState<Record<string, UserData>>({});
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -180,7 +157,7 @@ export default function AdminDashboard() {
       }
       
       // Fallback to the existing mechanism if admin API fails
-      const realUsers: Record<string, User> = {};
+      const realUsers: Record<string, UserData> = {};
       
       // Process each seller ID
       await Promise.all(

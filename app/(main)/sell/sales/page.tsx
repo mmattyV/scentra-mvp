@@ -8,39 +8,8 @@ import type { Schema } from '@/amplify/data/resource';
 import { FRAGRANCES } from '@/app/utils/fragrance-data';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { useRouter } from 'next/navigation';
-
-// Define the possible sale statuses
-type SaleStatus = 'unconfirmed' | 'shipping_to_scentra' | 'verifying' | 'shipping_to_buyer' | 'completed';
-
-// Interface for a sale item
-interface SaleItem {
-  id: string;
-  fragranceId: string;
-  bottleSize: string;
-  condition: string;
-  percentRemaining?: number;
-  askingPrice: number; // Using askingPrice from the Listing model
-  imageKey: string;
-  status: string; // This will be mapped to SaleStatus for type safety
-  createdAt: string;
-}
-
-// Status display configuration
-const STATUS_LABELS: Record<SaleStatus, string> = {
-  unconfirmed: 'Unconfirmed',
-  shipping_to_scentra: 'Shipping to Scentra',
-  verifying: 'Verifying',
-  shipping_to_buyer: 'Shipping to Buyer',
-  completed: 'Completed'
-};
-
-const STATUS_COLORS: Record<SaleStatus, string> = {
-  unconfirmed: 'bg-yellow-100 text-yellow-800',
-  shipping_to_scentra: 'bg-purple-100 text-purple-800',
-  verifying: 'bg-orange-100 text-orange-800',
-  shipping_to_buyer: 'bg-indigo-100 text-indigo-800',
-  completed: 'bg-green-100 text-green-800'
-};
+import type { SaleItem, SaleStatus } from '@/app/types';
+import { STATUS_LABELS, STATUS_COLORS } from '@/app/types';
 
 export default function SalesPage() {
   const router = useRouter();

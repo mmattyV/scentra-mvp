@@ -5,23 +5,12 @@
 import { generateClient } from 'aws-amplify/data';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import type { Schema } from '@/amplify/data/resource';
+import type { UserData } from '@/app/types';
 
 // Initialize a separate client specifically for admin operations with userPool authorization
 const adminClient = generateClient<Schema>({
   authMode: 'userPool' // This ensures we use Cognito User Pool groups for auth
 });
-
-/**
- * User data interface
- */
-export interface UserData {
-  userId: string;
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-}
 
 /**
  * Checks if the current user is in the ADMINS group

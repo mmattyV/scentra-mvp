@@ -1,63 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-interface Listing {
-  id: string;
-  sellerId: string;
-  fragranceId: string;
-  bottleSize: string;
-  condition: string;
-  percentRemaining?: number;
-  askingPrice: number;
-  status: string;
-  imageKey: string;
-  createdAt: string;
-}
-
-interface User {
-  userId: string;
-  username: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  [key: string]: any;
-}
-
-interface FragranceDetails {
-  name: string;
-  brand: string;
-  [key: string]: any;
-}
+import type { Listing, UserData, FragranceDetails } from '@/app/types';
+import { STATUS_LABELS, STATUS_COLORS } from '@/app/types';
 
 interface ListingDetailsModalProps {
   listing: Listing;
-  sellerInfo: User | undefined;
+  sellerInfo: UserData | undefined;
   fragranceDetails: FragranceDetails;
   onClose: () => void;
 }
-
-// Status display configuration
-const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-blue-100 text-blue-800',
-  unconfirmed: 'bg-yellow-100 text-yellow-800',
-  shipping_to_scentra: 'bg-purple-100 text-purple-800',
-  verifying: 'bg-orange-100 text-orange-800',
-  shipping_to_buyer: 'bg-indigo-100 text-indigo-800',
-  completed: 'bg-green-100 text-green-800',
-  removed: 'bg-red-100 text-red-800'
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  active: 'Active',
-  unconfirmed: 'Unconfirmed',
-  shipping_to_scentra: 'Shipping to Scentra',
-  verifying: 'Verifying',
-  shipping_to_buyer: 'Shipping to Buyer',
-  completed: 'Completed',
-  removed: 'Removed'
-};
 
 export default function ListingDetailsModal({
   listing,

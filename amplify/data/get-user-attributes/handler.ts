@@ -5,20 +5,12 @@ import {
   CognitoIdentityProviderClient,
   AttributeType
 } from "@aws-sdk/client-cognito-identity-provider";
+import type { UserData } from '../../../app/types';
 
 type Handler = Schema["getUserAttributes"]["functionHandler"];
 
 // Initialize the Cognito client
 const client = new CognitoIdentityProviderClient();
-
-interface UserData {
-  userId: string;
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-}
 
 export const handler: Handler = async (event) => {
   const { userId } = event.arguments;

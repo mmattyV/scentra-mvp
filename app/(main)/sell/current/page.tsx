@@ -8,18 +8,7 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
 import { FRAGRANCES } from '@/app/utils/fragrance-data';
 import { fetchAuthSession } from 'aws-amplify/auth';
-
-interface Listing {
-  id: string;
-  fragranceId: string;
-  bottleSize: string;
-  condition: string;
-  percentRemaining?: number;
-  askingPrice: number;
-  imageKey: string;
-  status: string;
-  createdAt: string;
-}
+import type { Listing } from '@/app/types';
 
 export default function CurrentListingsPage() {
   const router = useRouter();

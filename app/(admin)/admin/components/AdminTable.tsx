@@ -1,65 +1,15 @@
 import { useState, useEffect } from 'react';
+import type { Listing, UserData, FragranceDetails } from '@/app/types';
 import Image from 'next/image';
-
-// need to put interfaces in same file
-// need to standardize status_colors and labels
-
-interface Listing {
-  id: string;
-  sellerId: string;
-  fragranceId: string;
-  bottleSize: string;
-  condition: string;
-  percentRemaining?: number;
-  askingPrice: number;
-  status: string;
-  imageKey: string;
-  createdAt: string;
-}
-
-interface User {
-  userId: string;
-  username: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  [key: string]: any;
-}
-
-interface FragranceDetails {
-  name: string;
-  brand: string;
-  [key: string]: any;
-}
+import { STATUS_LABELS, STATUS_COLORS } from '@/app/types';
 
 interface AdminTableProps {
   listings: Listing[];
-  sellerInfo: Record<string, User>;
+  sellerInfo: Record<string, UserData>;
   getFragranceDetails: (fragranceId: string) => FragranceDetails;
   onStatusChange: (listing: Listing) => void;
   onViewDetails: (listing: Listing) => void;
 }
-
-// Status display configuration
-const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-blue-100 text-blue-800',
-  unconfirmed: 'bg-yellow-100 text-yellow-800',
-  shipping_to_scentra: 'bg-purple-100 text-purple-800',
-  verifying: 'bg-orange-100 text-orange-800',
-  shipping_to_buyer: 'bg-indigo-100 text-indigo-800',
-  completed: 'bg-green-100 text-green-800',
-  removed: 'bg-red-100 text-red-800'
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  active: 'Active',
-  unconfirmed: 'Unconfirmed',
-  shipping_to_scentra: 'Shipping to Scentra',
-  verifying: 'Verifying',
-  shipping_to_buyer: 'Shipping to Buyer',
-  completed: 'Completed',
-  removed: 'Removed'
-};
 
 export default function AdminTable({
   listings,
@@ -134,7 +84,7 @@ export default function AdminTable({
   };
   
   // Helper function to display seller name
-  const getSellerDisplayName = (seller: User): string => {
+  const getSellerDisplayName = (seller: UserData): string => {
     if (seller.firstName && seller.lastName) {
       return `${seller.firstName} ${seller.lastName}`;
     } else if (seller.firstName) {

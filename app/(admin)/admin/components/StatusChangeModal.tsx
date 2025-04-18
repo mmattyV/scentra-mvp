@@ -1,19 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-
-interface Listing {
-  id: string;
-  sellerId: string;
-  fragranceId: string;
-  bottleSize: string;
-  condition: string;
-  percentRemaining?: number;
-  askingPrice: number;
-  status: string;
-  imageKey: string;
-  createdAt: string;
-}
+import type { Listing } from '@/app/types';
+import { STATUS_LABELS } from '@/app/types';
 
 interface StatusChangeModalProps {
   listing: Listing;
@@ -21,16 +10,6 @@ interface StatusChangeModalProps {
   onClose: () => void;
   onStatusChange: (listingId: string, newStatus: string) => void;
 }
-
-const STATUS_LABELS: Record<string, string> = {
-  active: 'Active',
-  unconfirmed: 'Unconfirmed',
-  shipping_to_scentra: 'Shipping to Scentra',
-  verifying: 'Verifying',
-  shipping_to_buyer: 'Shipping to Buyer',
-  completed: 'Completed',
-  removed: 'Removed'
-};
 
 export default function StatusChangeModal({
   listing,
