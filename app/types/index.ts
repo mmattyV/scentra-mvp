@@ -14,6 +14,10 @@ export interface Listing {
   updatedAt?: string;
 }
 
+export interface ListingWithImage extends Listing {
+  imageUrl: string;
+}
+
 export interface FragranceGroup {
   fragranceId: string;
   name: string;
