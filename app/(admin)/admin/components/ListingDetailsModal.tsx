@@ -13,7 +13,6 @@ interface Listing {
   status: string;
   imageKey: string;
   createdAt: string;
-  updatedAt?: string;
 }
 
 interface User {
@@ -204,12 +203,6 @@ export default function ListingDetailsModal({
                     <span className="text-gray-500">Created:</span>{' '}
                     <span>{formatDate(listing.createdAt)}</span>
                   </div>
-                  {listing.updatedAt && (
-                    <div>
-                      <span className="text-gray-500">Last Updated:</span>{' '}
-                      <span>{formatDate(listing.updatedAt)}</span>
-                    </div>
-                  )}
                 </div>
               </div>
               
