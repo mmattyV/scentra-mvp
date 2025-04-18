@@ -14,6 +14,15 @@ export interface Listing {
   updatedAt?: string;
 }
 
+export interface FragranceGroup {
+  fragranceId: string;
+  name: string;
+  brand: string;
+  lowestPrice: number;
+  imageUrl: string;
+  listings: Listing[];
+}
+
 export type SaleStatus = 'unconfirmed' | 'shipping_to_scentra' | 'verifying' | 'shipping_to_buyer' | 'completed';
 
 export interface SaleItem extends Omit<Listing, 'sellerId'> {
