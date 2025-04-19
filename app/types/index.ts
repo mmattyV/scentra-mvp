@@ -48,6 +48,24 @@ export interface FragranceDetails {
   [key: string]: any;
 }
 
+export interface CartItem {
+  id: string;
+  listingId: string;
+  sellerId: string;
+  fragranceId: string;
+  fragranceName: string;
+  brand: string;
+  bottleSize: string;
+  condition: string;
+  percentRemaining?: number;
+  originalPrice: number;
+  currentPrice: number;
+  imageUrl: string;
+  addedAt: string;
+  isAvailable: boolean;
+  priceChanged: boolean;
+}
+
 export const STATUS_LABELS: Record<string, string> = {
   active: 'Active',
   unconfirmed: 'Unconfirmed',

@@ -2,19 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
 import type { Listing, ListingWithImage } from '@/app/types';
 import { FRAGRANCES } from '@/app/utils/fragrance-data';
+import { useCart } from '@/app/context/CartContext';
 
 export default function ProductDetailsPage() {
+  const router = useRouter();
   const { fragranceId } = useParams();
   const [listings, setListings] = useState<ListingWithImage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [addedToCart, setAddedToCart] = useState(false);
+  
+  // Cart Context
+  const { addItem, isItemInCart } = useCart();
   
   // Modals
   const [isReturnPolicyOpen, setReturnPolicyOpen] = useState(false);
@@ -115,6 +122,41 @@ export default function ProductDetailsPage() {
     } catch (error) {
       console.error('Error fetching image URLs:', error);
       return [];
+    }
+  };
+  
+  // Check if selected listing is in cart
+  const isSelectedItemInCart = () => {
+    if (!selectedListingId) return false;
+    return isItemInCart(selectedListingId);
+  };
+  
+  // Add selected listing to cart
+  const handleAddToCart = async () => {
+    if (!selectedListingId) {
+      return;
+    }
+    
+    // Find the selected listing
+    const selectedListing = listings.find(listing => listing.id === selectedListingId);
+    if (!selectedListing) {
+      return;
+    }
+    
+    setAddingToCart(true);
+    
+    try {
+      await addItem(selectedListing, selectedListing.imageUrl);
+      setAddedToCart(true);
+      
+      // Reset the added to cart state after 3 seconds
+      setTimeout(() => {
+        setAddedToCart(false);
+      }, 3000);
+    } catch (error) {
+      console.error('Error adding item to cart:', error);
+    } finally {
+      setAddingToCart(false);
     }
   };
   
@@ -255,7 +297,7 @@ export default function ProductDetailsPage() {
                               <div className="text-sm text-gray-600 mt-1">
                                 <p>Size: {listing.bottleSize}</p>
                                 <p>Condition: {listing.condition}</p>
-                                {listing.percentRemaining !== undefined && listing.percentRemaining <= 100 && (
+                                {listing.condition === 'used' && listing.percentRemaining !== undefined && listing.percentRemaining <= 100 && (
                                   <p>{listing.percentRemaining}% remaining</p>
                                 )}
                                 {listing.condition === 'used' && listing.percentRemaining === 100 && (
@@ -281,21 +323,35 @@ export default function ProductDetailsPage() {
                 {listings.length > 0 && (
                   <button
                     onClick={() => {
-                      // Will implement cart functionality later
-                      if (!selectedListingId) {
-                        alert('Please select a listing first');
+                      if (isSelectedItemInCart()) {
+                        // Navigate to cart if item is already in cart
+                        router.push('/cart');
                       } else {
-                        alert('Adding to cart feature will be implemented soon!');
+                        // Add to cart
+                        handleAddToCart();
                       }
                     }}
-                    disabled={!selectedListingId}
+                    disabled={!selectedListingId || addingToCart}
                     className={`w-full py-4 text-white rounded-lg font-medium transition-colors ${
-                      selectedListingId
-                        ? 'bg-black hover:bg-gray-800' 
-                        : 'bg-gray-400 cursor-not-allowed'
+                      !selectedListingId
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : isSelectedItemInCart()
+                          ? 'bg-green-600 hover:bg-green-700'
+                          : addedToCart
+                            ? 'bg-green-600'
+                            : 'bg-black hover:bg-gray-800'
                     }`}
                   >
-                    {selectedListingId ? 'Add to Cart' : 'Select an Option Above'}
+                    {!selectedListingId 
+                      ? 'Select an Option Above'
+                      : addingToCart
+                        ? 'Adding to Cart...'
+                        : isSelectedItemInCart()
+                          ? 'View in Cart'
+                          : addedToCart
+                            ? 'Added to Cart!'
+                            : 'Add to Cart'
+                    }
                   </button>
                 )}
 
