@@ -4,11 +4,9 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/app/context/CartContext';
-import { useRouter } from 'next/navigation';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 
 export default function CartPage() {
-  const router = useRouter();
   const { user } = useAuthenticator((context) => [context.user]);
   const { 
     items, 
