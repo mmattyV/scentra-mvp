@@ -113,6 +113,8 @@ export default function Header() {
                   <Link href="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Home</Link>
                   <Link href="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Past Orders</Link>
                   <Link href="/cart" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Cart</Link>
+                  <Link href="/about" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">About Us</Link>
+                  <Link href="/faq" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">FAQ</Link>
                   <div className="border-t border-gray-100 mt-2 pt-2 px-4 py-2 text-sm text-gray-700">
                     Contact Us: <a href="mailto:contact@scentra.app" className="text-blue-600 hover:underline">contact@scentra.app</a>
                   </div>
