@@ -279,6 +279,13 @@ export default function SalesPage() {
                       {STATUS_LABELS[saleStatus] || item.status}
                     </span>
 
+                    {/* On Hold Message */}
+                    {item.status === 'on_hold' && (
+                      <div className="text-sm text-amber-700 mt-1">
+                        Awaiting payment
+                      </div>
+                    )}
+
                     {/* Unconfirmed Sale Actions */}
                     {item.status === 'unconfirmed' && (
                       <div className="flex flex-col items-end space-y-2">

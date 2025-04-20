@@ -9,6 +9,7 @@ interface StatusFilterProps {
 const STATUS_LABELS: Record<string, string> = {
   all: 'All Listings',
   active: 'Active',
+  on_hold: 'On Hold',
   unconfirmed: 'Unconfirmed',
   shipping_to_scentra: 'Shipping to Scentra',
   verifying: 'Verifying',

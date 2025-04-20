@@ -18,7 +18,9 @@ const getValidStatusTransitions = (currentStatus: string): string[] => {
   // Define which statuses a listing can be changed to based on current status
   switch(currentStatus) {
     case 'active':
-      return ['removed', 'unconfirmed'];
+      return ['removed', 'on_hold', 'unconfirmed'];
+    case 'on_hold':
+      return ['active', 'unconfirmed', 'removed'];
     case 'unconfirmed':
       return ['shipping_to_scentra', 'removed'];
     case 'shipping_to_scentra':
