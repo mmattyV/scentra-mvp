@@ -14,6 +14,7 @@ export default function Header() {
   const [isBuyerMenuOpen, setIsBuyerMenuOpen] = useState(false);
   const [cartCount] = useState(0); // This will be connected to backend later
   const [userName, setUserName] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
   const { authStatus, signOut, user } = useAuthenticator(context => [context.authStatus, context.user]);
   const router = useRouter();
 
@@ -62,6 +63,16 @@ export default function Header() {
     fetchUserData();
   }, [authStatus, user]);
 
+  // Handle search submission
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      router.push(`/?search=${encodeURIComponent(searchTerm.trim())}`);
+    } else {
+      router.push('/');
+    }
+  };
+
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <nav className="container mx-auto px-4 py-3">
@@ -88,13 +99,19 @@ export default function Header() {
 
           {/* Search Bar */}
           <div className="flex-grow max-w-2xl">
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
                 placeholder="Search product or brand"
                 className="w-full px-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-500 placeholder-gray-500 text-gray-800 text-ellipsis"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className="absolute right-3 top-1/2 -translate-y-1/2">
+              <button 
+                type="submit" 
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+                aria-label="Search"
+              >
                 <svg
                   className="w-5 h-5 text-gray-500"
                   fill="none"
@@ -109,7 +126,7 @@ export default function Header() {
                   />
                 </svg>
               </button>
-            </div>
+            </form>
           </div>
 
           {/* Right Section */}
