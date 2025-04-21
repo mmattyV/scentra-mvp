@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useAuthenticator } from "@aws-amplify/ui-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,6 +10,13 @@ import type { Listing, FragranceGroup } from "@/app/types";
 import { FRAGRANCES } from '@/app/utils/fragrance-data';
 import { useSearchParams, useRouter } from "next/navigation";
 
+// SearchParamsWrapper component to isolate the useSearchParams hook
+function SearchParamsWrapper({ children }: { children: (searchTerm: string) => React.ReactNode }) {
+  const searchParams = useSearchParams();
+  const searchTerm = searchParams.get('search') || '';
+  return <>{children(searchTerm)}</>;
+}
+
 export default function HomePage() {
   const { user } = useAuthenticator((context) => [context.user]);
   const [fragranceGroups, setFragranceGroups] = useState<FragranceGroup[]>([]);
@@ -18,9 +25,7 @@ export default function HomePage() {
   const [isClient, setIsClient] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const searchTerm = searchParams.get('search') || '';
   
   // Handle client-side rendering
   useEffect(() => {
@@ -33,15 +38,8 @@ export default function HomePage() {
     }
   }, [isClient]);
   
-  // Filter fragrances when search term or fragrance groups change
-  useEffect(() => {
-    if (fragranceGroups.length > 0) {
-      filterFragrances();
-    }
-  }, [searchTerm, fragranceGroups]);
-  
   // Filter fragrances based on search term
-  const filterFragrances = () => {
+  const filterFragrances = (searchTerm: string) => {
     if (!searchTerm) {
       setFilteredGroups(fragranceGroups);
       return;
@@ -90,8 +88,7 @@ export default function HomePage() {
       // Group listings by fragranceId
       const grouped = groupListingsByFragrance(listings, imageUrls);
       setFragranceGroups(grouped);
-      // Initially set filtered groups to all groups
-      // The useEffect will handle filtering based on search term
+      setFilteredGroups(grouped);
     } catch (error) {
       console.error('Error fetching listings:', error);
       setError('Failed to load fragrances. Please try again later.');
@@ -176,119 +173,139 @@ export default function HomePage() {
     return Array.from(fragranceMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   };
   
-  if (isLoading) {
-    return (
+  return (
+    <Suspense fallback={
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="spinner mb-4"></div>
           <p className="text-gray-600">Loading fragrances...</p>
         </div>
       </div>
-    );
-  }
-  
-  if (error) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center max-w-md px-4">
-          <div className="text-red-500 text-5xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button 
-            onClick={() => {
-              setError(null);
-              fetchListings();
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
-  return (
-    <div className="min-h-screen bg-white">
-      <main className="container mx-auto px-4 py-8">
-        {/* Search results header */}
-        {searchTerm && (
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">
-                Search results for: <span className="italic">{searchTerm}</span>
-              </h2>
-              <p className="text-gray-600 text-sm mt-1">
-                Found {filteredGroups.length} {filteredGroups.length === 1 ? 'fragrance' : 'fragrances'}
-              </p>
+    }>
+      <SearchParamsWrapper>
+        {(searchTerm) => {
+          // Apply filtering when search term changes
+          if (fragranceGroups.length > 0) {
+            filterFragrances(searchTerm);
+          }
+          
+          if (isLoading) {
+            return (
+              <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="text-center">
+                  <div className="spinner mb-4"></div>
+                  <p className="text-gray-600">Loading fragrances...</p>
+                </div>
+              </div>
+            );
+          }
+          
+          if (error) {
+            return (
+              <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="text-center max-w-md px-4">
+                  <div className="text-red-500 text-5xl mb-4">⚠️</div>
+                  <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
+                  <p className="text-gray-600 mb-4">{error}</p>
+                  <button 
+                    onClick={() => {
+                      setError(null);
+                      fetchListings();
+                    }}
+                    className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            );
+          }
+          
+          return (
+            <div className="min-h-screen bg-white">
+              <main className="container mx-auto px-4 py-8">
+                {/* Search results header */}
+                {searchTerm && (
+                  <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-semibold">
+                        Search results for: <span className="italic">{searchTerm}</span>
+                      </h2>
+                      <p className="text-gray-600 text-sm mt-1">
+                        Found {filteredGroups.length} {filteredGroups.length === 1 ? 'fragrance' : 'fragrances'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={clearSearch}
+                      className="mt-2 sm:mt-0 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors inline-flex items-center"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Clear Search
+                    </button>
+                  </div>
+                )}
+                
+                {filteredGroups.length === 0 ? (
+                  <div className="text-center py-12">
+                    {searchTerm ? (
+                      <>
+                        <h2 className="text-xl font-semibold mb-2">No fragrances found matching "{searchTerm}"</h2>
+                        <p className="text-gray-600 mb-4">Try different search terms or browse all fragrances</p>
+                        <button
+                          onClick={clearSearch}
+                          className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors"
+                        >
+                          View All Fragrances
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <h2 className="text-xl font-semibold mb-2">No fragrances available</h2>
+                        <p className="text-gray-600">Check back soon for new listings.</p>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {filteredGroups.map((group) => (
+                      <Link
+                        href={`/product/${group.fragranceId}`}
+                        key={group.fragranceId}
+                        className="block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        <div className="relative aspect-square">
+                          <Image
+                            src={group.imageUrl}
+                            alt={group.name}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            priority={false}
+                          />
+                        </div>
+                        <div className="p-4">
+                          <h3 className="text-lg font-medium text-gray-900">
+                            {group.name}
+                          </h3>
+                          <p className="text-sm text-gray-500">{group.brand}</p>
+                          <p className="mt-2 text-lg font-medium text-gray-900">
+                            From ${group.lowestPrice}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {group.listings.length} listing{group.listings.length !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </main>
             </div>
-            <button
-              onClick={clearSearch}
-              className="mt-2 sm:mt-0 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors inline-flex items-center"
-            >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              Clear Search
-            </button>
-          </div>
-        )}
-        
-        {filteredGroups.length === 0 ? (
-          <div className="text-center py-12">
-            {searchTerm ? (
-              <>
-                <h2 className="text-xl font-semibold mb-2">No fragrances found matching "{searchTerm}"</h2>
-                <p className="text-gray-600 mb-4">Try different search terms or browse all fragrances</p>
-                <button
-                  onClick={clearSearch}
-                  className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors"
-                >
-                  View All Fragrances
-                </button>
-              </>
-            ) : (
-              <>
-                <h2 className="text-xl font-semibold mb-2">No fragrances available</h2>
-                <p className="text-gray-600">Check back soon for new listings.</p>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredGroups.map((group) => (
-              <Link
-                href={`/product/${group.fragranceId}`}
-                key={group.fragranceId}
-                className="block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="relative aspect-square">
-                  <Image
-                    src={group.imageUrl}
-                    alt={group.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    priority={false}
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    {group.name}
-                  </h3>
-                  <p className="text-sm text-gray-500">{group.brand}</p>
-                  <p className="mt-2 text-lg font-medium text-gray-900">
-                    From ${group.lowestPrice}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {group.listings.length} listing{group.listings.length !== 1 ? 's' : ''}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+          );
+        }}
+      </SearchParamsWrapper>
+    </Suspense>
   );
 }
