@@ -24,8 +24,10 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentSearchTerm, setCurrentSearchTerm] = useState('');
   
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   // Handle client-side rendering
   useEffect(() => {
@@ -38,6 +40,19 @@ export default function HomePage() {
     }
   }, [isClient]);
   
+  // Apply filtering when search term changes
+  useEffect(() => {
+    if (fragranceGroups.length > 0) {
+      filterFragrances(currentSearchTerm);
+    }
+  }, [currentSearchTerm, fragranceGroups]);
+
+  // Update the search term state when the URL changes
+  useEffect(() => {
+    const urlSearchTerm = searchParams.get('search') || '';
+    setCurrentSearchTerm(urlSearchTerm);
+  }, [searchParams]);
+
   // Filter fragrances based on search term
   const filterFragrances = (searchTerm: string) => {
     if (!searchTerm) {
@@ -182,130 +197,70 @@ export default function HomePage() {
         </div>
       </div>
     }>
-      <SearchParamsWrapper>
-        {(searchTerm) => {
-          // Apply filtering when search term changes
-          if (fragranceGroups.length > 0) {
-            filterFragrances(searchTerm);
-          }
-          
-          if (isLoading) {
-            return (
-              <div className="min-h-screen bg-white flex items-center justify-center">
-                <div className="text-center">
-                  <div className="spinner mb-4"></div>
-                  <p className="text-gray-600">Loading fragrances...</p>
-                </div>
-              </div>
-            );
-          }
-          
-          if (error) {
-            return (
-              <div className="min-h-screen bg-white flex items-center justify-center">
-                <div className="text-center max-w-md px-4">
-                  <div className="text-red-500 text-5xl mb-4">⚠️</div>
-                  <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
-                  <p className="text-gray-600 mb-4">{error}</p>
-                  <button 
-                    onClick={() => {
-                      setError(null);
-                      fetchListings();
-                    }}
-                    className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
-                  >
-                    Try Again
-                  </button>
-                </div>
-              </div>
-            );
-          }
-          
-          return (
-            <div className="min-h-screen bg-white">
-              <main className="container mx-auto px-4 py-8">
-                {/* Search results header */}
-                {searchTerm && (
-                  <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between">
-                    <div>
-                      <h2 className="text-xl font-semibold">
-                        Search results for: <span className="italic">{searchTerm}</span>
-                      </h2>
-                      <p className="text-gray-600 text-sm mt-1">
-                        Found {filteredGroups.length} {filteredGroups.length === 1 ? 'fragrance' : 'fragrances'}
-                      </p>
-                    </div>
-                    <button
-                      onClick={clearSearch}
-                      className="mt-2 sm:mt-0 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors inline-flex items-center"
-                    >
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      Clear Search
-                    </button>
-                  </div>
-                )}
-                
-                {filteredGroups.length === 0 ? (
-                  <div className="text-center py-12">
-                    {searchTerm ? (
-                      <>
-                        <h2 className="text-xl font-semibold mb-2">No fragrances found matching "{searchTerm}"</h2>
-                        <p className="text-gray-600 mb-4">Try different search terms or browse all fragrances</p>
-                        <button
-                          onClick={clearSearch}
-                          className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors"
-                        >
-                          View All Fragrances
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <h2 className="text-xl font-semibold mb-2">No fragrances available</h2>
-                        <p className="text-gray-600">Check back soon for new listings.</p>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {filteredGroups.map((group) => (
-                      <Link
-                        href={`/product/${group.fragranceId}`}
-                        key={group.fragranceId}
-                        className="block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <div className="relative aspect-square">
-                          <Image
-                            src={group.imageUrl}
-                            alt={group.name}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            priority={false}
-                          />
-                        </div>
-                        <div className="p-4">
-                          <h3 className="text-lg font-medium text-gray-900">
-                            {group.name}
-                          </h3>
-                          <p className="text-sm text-gray-500">{group.brand}</p>
-                          <p className="mt-2 text-lg font-medium text-gray-900">
-                            From ${group.lowestPrice}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {group.listings.length} listing{group.listings.length !== 1 ? 's' : ''}
-                          </p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </main>
+      <div className="container mx-auto px-4 py-8">
+        {/* Hero Section */}
+        <div className="mb-8">
+          {currentSearchTerm ? (
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold">
+                Search results for: <span className="text-gray-600">{currentSearchTerm}</span>
+              </h1>
+              <button 
+                onClick={clearSearch}
+                className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md flex items-center"
+              >
+                <span className="mr-1">Clear</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-          );
-        }}
-      </SearchParamsWrapper>
+          ) : (
+            <h1 className="text-2xl font-bold mb-2">Explore Fragrances</h1>
+          )}
+          {isLoading ? (
+            <div className="min-h-screen bg-white flex items-center justify-center">
+              <div className="text-center">
+                <div className="spinner mb-4"></div>
+                <p className="text-gray-600">Loading fragrances...</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredGroups.map((group) => (
+                <Link
+                  href={`/product/${group.fragranceId}`}
+                  key={group.fragranceId}
+                  className="block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="relative aspect-square">
+                    <Image
+                      src={group.imageUrl}
+                      alt={group.name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority={false}
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {group.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">{group.brand}</p>
+                    <p className="mt-2 text-lg font-medium text-gray-900">
+                      From ${group.lowestPrice}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {group.listings.length} listing{group.listings.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </Suspense>
   );
 }

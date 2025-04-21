@@ -475,11 +475,14 @@ export default function SalesPage() {
                           <p className="text-sm font-semibold text-gray-900">${parseFloat(item.askingPrice.toString()).toFixed(2)}</p>
                           
                           {/* Action buttons based on status */}
-                          {item.status === 'sold' as SaleStatus && !showConfirmation && (
+                          {item.status === 'unconfirmed' && !showConfirmation && (
                             <button
                               onClick={() => handleConfirmClick(item)}
-                              className="mt-1 text-xs text-indigo-600 hover:text-indigo-800"
+                              className="mt-1 text-xs inline-flex items-center px-3 py-1 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 focus:outline-none"
                             >
+                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                              </svg>
                               Confirm Sale
                             </button>
                           )}
@@ -521,29 +524,48 @@ export default function SalesPage() {
       {showShippingInstructions && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold mb-4">Shipping Instructions</h3>
-            <div className="prose prose-sm">
-              <p>Please follow these steps to ship your item to Scentra:</p>
-              <ol className="list-decimal pl-5 space-y-2">
-                <li>Package your item securely to prevent damage during shipping.</li>
-                <li>Print a shipping label addressed to our verification center.</li>
-                <li>Drop off your package at any USPS, UPS, or FedEx location.</li>
-                <li>Keep your tracking number for reference.</li>
-              </ol>
-              <p className="font-semibold mt-4">Shipping Address:</p>
-              <div className="bg-gray-50 p-3 rounded mb-4">
-                <p>Scentra Verification Center<br />
-                123 Fragrance Blvd<br />
-                New York, NY 10001</p>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Shipping Instructions</h3>
+              <div className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Sale Confirmed
               </div>
-              <p className="text-sm text-gray-500">We'll notify you once we receive and verify your item. Payment will be processed after verification is complete.</p>
             </div>
+            
+            <div className="prose prose-sm">
+              <p className="font-medium text-gray-700">Thank you for confirming your sale! Please follow these steps to ship your item to Scentra:</p>
+              
+              <div className="bg-amber-50 border-l-4 border-amber-400 p-3 my-4">
+                <p className="text-amber-700 font-medium">Important: Ship your item within 3 business days to avoid cancellation.</p>
+              </div>
+              
+              <ol className="list-decimal pl-5 space-y-3 my-4">
+                <li>Package your fragrance securely with bubble wrap or similar padding.</li>
+                <li>Place it in a sturdy box to prevent damage during shipping.</li>
+                <li>Print a shipping label addressed to our verification center.</li>
+                <li>Ship via USPS, UPS, or FedEx with tracking.</li>
+                <li>Email your tracking number to <span className="font-medium">shipping@scentra.com</span> with your order ID.</li>
+              </ol>
+              
+              <div className="bg-gray-50 p-4 rounded-md mb-4 border border-gray-200">
+                <p className="font-semibold mb-1">Shipping Address:</p>
+                <p className="font-medium">
+                  Scentra Verification Center<br />
+                  123 Fragrance Blvd<br />
+                  New York, NY 10001
+                </p>
+              </div>
+              
+              <p className="text-sm text-gray-700 mb-2">We'll notify you once we receive and verify your item. Payment will be processed to your preferred payment method after verification is complete, typically within 1-2 business days.</p>
+              
+              <p className="text-sm font-medium">Order Reference: {confirmingItem?.id.substring(0, 8)}</p>
+            </div>
+            
             <div className="mt-6 flex justify-end">
               <button
                 onClick={closeShippingInstructions}
-                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 focus:outline-none"
               >
-                Close
+                Got It
               </button>
             </div>
           </div>

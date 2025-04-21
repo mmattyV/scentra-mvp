@@ -239,140 +239,166 @@ export default function CurrentListingsPage() {
   return (
     <div className="min-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-black mb-8">Current Listings</h1>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-10 w-10 border-2 border-black border-t-transparent"></div>
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-500">{error}</p>
-            <button 
-              onClick={fetchListings} 
-              className="mt-4 px-4 py-2 bg-black text-white rounded-md"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : listings.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-lg text-gray-600">You don't have any active listings.</p>
-            <button 
-              onClick={() => router.push('/sell/new')} 
-              className="mt-4 px-4 py-2 bg-black text-white rounded-md"
+        <div className="max-w-5xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold">Current Listings</h1>
+            <button
+              onClick={() => router.push('/sell/new')}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none"
             >
               Create New Listing
             </button>
           </div>
-        ) : (
-          <div className="space-y-4 mb-12">
-            {listings.map((listing) => {
-              if (!listing || !listing.fragranceId) {
-                return null; // Skip rendering this item if listing or fragranceId is null/undefined
-              }
-              const fragrance = getFragranceDetails(listing.fragranceId);
-              return (
-                <div key={listing.id} className="flex items-center gap-6 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-                  {/* Image */}
-                  <div className="relative w-24 h-24">
-                    <Image
-                      src={imageUrls[listing.id] || '/placeholder-fragrance.jpg'}
-                      alt={fragrance.name}
-                      fill
-                      className="object-cover rounded-md"
-                    />
-                  </div>
 
-                  {/* Product Info */}
-                  <div className="flex-grow">
-                    <h3 className="text-lg font-medium text-black">{fragrance.name}</h3>
-                    <p className="text-sm text-gray-600">{fragrance.brand}</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {listing.bottleSize} • {listing.condition} 
-                      {listing.condition === 'used' && listing.percentRemaining && 
-                        ` • ${listing.percentRemaining}% remaining`
-                      }
-                    </p>
-                  </div>
-
-                  {/* Ask Price */}
-                  <div className="text-lg font-medium text-gray-700">
-                    {editingId === listing.id ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                            <span className="text-gray-500 sm:text-sm">$</span>
-                          </div>
-                          <input
-                            type="number"
-                            min="0.01"
-                            step="0.01"
-                            value={newPrice}
-                            onChange={(e) => setNewPrice(e.target.value)}
-                            className="pl-6 pr-2 py-1 w-24 border border-gray-300 rounded-md text-sm"
+          {error ? (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              </div>
+            </div>
+          ) : isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-black"></div>
+            </div>
+          ) : listings.length === 0 ? (
+            <div className="bg-gray-50 rounded-lg p-8 text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No active listings</h3>
+              <p className="text-gray-500 mb-6">You don't have any active listings yet.</p>
+              <button
+                onClick={() => router.push('/sell/new')}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-black hover:bg-gray-800 focus:outline-none"
+              >
+                Create New Listing
+              </button>
+            </div>
+          ) : (
+            <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+              <ul className="divide-y divide-gray-200">
+                {listings.map((listing) => {
+                  if (!listing || !listing.fragranceId) return null;
+                  
+                  const fragrance = getFragranceDetails(listing.fragranceId);
+                  return (
+                    <li key={listing.id} className="p-4 hover:bg-gray-50">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0 relative h-16 w-16 rounded-md overflow-hidden">
+                          <Image
+                            src={imageUrls[listing.id] || '/placeholder-fragrance.jpg'}
+                            alt={fragrance.name}
+                            fill
+                            style={{ objectFit: 'cover' }}
                           />
                         </div>
-                        <button
-                          onClick={() => updatePrice(listing.id)}
-                          disabled={isPriceUpdating}
-                          className="p-1 text-green-600 hover:text-green-800"
-                        >
-                          ✓
-                        </button>
-                        <button
-                          onClick={cancelEditing}
-                          className="p-1 text-red-600 hover:text-red-800"
-                        >
-                          ✕
-                        </button>
+                        
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {fragrance.brand} - {fragrance.name}
+                          </p>
+                          <p className="text-sm text-gray-500 truncate">
+                            {listing.bottleSize} • {listing.condition === 'new' ? 'New' : `Used (${listing.percentRemaining}% remaining)`}
+                          </p>
+                          <div className="mt-1">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              Active
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex-shrink-0 text-right">
+                          {editingId === listing.id ? (
+                            <div className="flex items-center space-x-1">
+                              <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                                  <span className="text-gray-500 sm:text-sm">$</span>
+                                </div>
+                                <input
+                                  type="number"
+                                  min="0.01"
+                                  step="0.01"
+                                  value={newPrice}
+                                  onChange={(e) => setNewPrice(e.target.value)}
+                                  className="pl-6 pr-2 py-1 w-24 border border-gray-300 rounded-md text-sm"
+                                  autoFocus
+                                />
+                              </div>
+                              <button
+                                onClick={() => updatePrice(listing.id)}
+                                disabled={isPriceUpdating}
+                                className="p-1 text-green-600 hover:text-green-800"
+                                title="Save"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                              </button>
+                              <button
+                                onClick={cancelEditing}
+                                className="p-1 text-red-600 hover:text-red-800"
+                                title="Cancel"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                              </button>
+                            </div>
+                          ) : (
+                            <p className="text-sm font-semibold text-gray-900">${parseFloat(listing.askingPrice.toString()).toFixed(2)}</p>
+                          )}
+                          
+                          {/* Action buttons */}
+                          {!editingId && !deletingId && (
+                            <div className="mt-1 flex space-x-2">
+                              <button
+                                onClick={() => startEditing(listing)}
+                                className="text-xs text-indigo-600 hover:text-indigo-800"
+                              >
+                                Edit Price
+                              </button>
+                              <button
+                                onClick={() => confirmTakeDown(listing.id)}
+                                className="text-xs text-red-600 hover:text-red-800"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          )}
+                          
+                          {/* Deletion confirmation */}
+                          {deletingId === listing.id && (
+                            <div className="mt-1 text-xs">
+                              <p className="mb-1 text-gray-700">Remove listing?</p>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => takeDownListing(listing)}
+                                  className="px-2 py-1 bg-red-600 text-white rounded-md hover:bg-red-700"
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  onClick={cancelTakeDown}
+                                  className="px-2 py-1 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                                >
+                                  No
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      `$${listing.askingPrice.toFixed(2)}`
-                    )}
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center space-x-4">
-                    {deletingId === listing.id ? (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-red-600">Confirm?</span>
-                        <button
-                          onClick={() => takeDownListing(listing)}
-                          className="px-2 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700"
-                        >
-                          Yes
-                        </button>
-                        <button
-                          onClick={cancelTakeDown}
-                          className="px-2 py-1 text-sm font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
-                        >
-                          No
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => startEditing(listing)}
-                          disabled={editingId !== null}
-                          className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors disabled:opacity-50"
-                        >
-                          Change Ask
-                        </button>
-                        <button
-                          onClick={() => confirmTakeDown(listing.id)}
-                          className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
-                        >
-                          Take Down
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
