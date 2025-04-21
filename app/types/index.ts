@@ -11,7 +11,7 @@ export interface Listing {
   imageKey: string;
   status: string;
   createdAt: string;
-  updatedAt?: string;
+  updatedAt: string;
 }
 
 export interface ListingWithImage extends Listing {
@@ -106,7 +106,7 @@ export interface Order {
   paymentMethod: 'venmo' | 'paypal';
   paymentInstructions: string;
   createdAt: string;
-  updatedAt?: string;
+  updatedAt: string;
   notes?: string;
 }
 

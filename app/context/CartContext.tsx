@@ -295,7 +295,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
           paymentMethod,
           paymentInstructions,
           notes: `Includes 3% verification fee: $${verificationFee.toFixed(2)}`,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         });
         
         // Step 3: Create order items

@@ -326,6 +326,7 @@ export default function NewListingPage() {
         imageKey: imageKey,
         status: 'active',
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
       
       // Redirect to confirmation page

@@ -46,7 +46,7 @@ const schema = a.schema({
       status: a.string().default("active"), // "active", "sold", "removed"
       imageKey: a.string().required(), // S3 key for the image in Amplify Storage
       createdAt: a.datetime().required(),
-      updatedAt: a.datetime(),
+      updatedAt: a.datetime().required(),
     })
     .authorization((allow) => [
       // Public API key users can only read
@@ -70,8 +70,8 @@ const schema = a.schema({
       orderStatus: a.string().required(), // 'unconfirmed', 'shipping_to_scentra', 'verifying', 'shipping_to_buyer', 'completed'
       paymentMethod: a.string().required(), // 'venmo', 'paypal'
       paymentInstructions: a.string().required(),
-      createdAt: a.string().required(),
-      updatedAt: a.string(),
+      createdAt: a.datetime().required(),
+      updatedAt: a.datetime().required(),
       notes: a.string(),
     })
     .authorization((allow) => [
