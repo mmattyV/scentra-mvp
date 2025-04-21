@@ -158,6 +158,19 @@ export default function CurrentListingsPage() {
         authMode: 'userPool' // Explicitly use Cognito User Pool for auth
       });
       
+      // First check if the listing is still active
+      const { data: listing } = await client.models.Listing.get({
+        id: listingId
+      });
+      
+      if (!listing || listing.status !== 'active') {
+        alert('This listing has already been purchased and cannot be modified.');
+        setEditingId(null);
+        setNewPrice('');
+        setIsPriceUpdating(false);
+        return;
+      }
+      
       await client.models.Listing.update({
         id: listingId,
         askingPrice: parseFloat(newPrice)
@@ -203,6 +216,17 @@ export default function CurrentListingsPage() {
       const client = generateClient<Schema>({
         authMode: 'userPool' // Explicitly use Cognito User Pool for auth
       });
+      
+      // First check if the listing is still active
+      const { data: currentListing } = await client.models.Listing.get({
+        id: listing.id
+      });
+      
+      if (!currentListing || currentListing.status !== 'active') {
+        alert('This listing has already been purchased and cannot be removed.');
+        setDeletingId(null);
+        return;
+      }
       
       // Update the listing status to 'removed'
       await client.models.Listing.update({

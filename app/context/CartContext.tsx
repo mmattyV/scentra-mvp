@@ -222,6 +222,74 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         authMode: 'userPool'
       });
       
+      // Re-validate all cart items to check for availability and price changes
+      const validationResults = await Promise.all(
+        items.map(async (item) => {
+          try {
+            const { data: listing } = await client.models.Listing.get({
+              id: item.listingId
+            });
+            
+            if (!listing || listing.status !== 'active') {
+              return { 
+                id: item.listingId, 
+                isValid: false, 
+                errorType: 'unavailable',
+                name: item.fragranceName 
+              };
+            }
+            
+            if (listing.askingPrice !== item.currentPrice) {
+              return { 
+                id: item.listingId, 
+                isValid: false, 
+                errorType: 'price_changed',
+                name: item.fragranceName,
+                oldPrice: item.currentPrice,
+                newPrice: listing.askingPrice
+              };
+            }
+            
+            return { 
+              id: item.listingId, 
+              isValid: true 
+            };
+          } catch (error) {
+            console.error(`Error validating listing ${item.listingId}:`, error);
+            return { 
+              id: item.listingId, 
+              isValid: false, 
+              errorType: 'error',
+              name: item.fragranceName 
+            };
+          }
+        })
+      );
+      
+      // Check for validation issues
+      const invalidItems = validationResults.filter(result => !result.isValid);
+      
+      if (invalidItems.length > 0) {
+        // Check if there are unavailable items
+        const unavailableItems = invalidItems.filter(item => item.errorType === 'unavailable');
+        if (unavailableItems.length > 0) {
+          const itemNames = unavailableItems.map(item => item.name).join(', ');
+          throw new Error(`The following items are no longer available: ${itemNames}. Please update your cart.`);
+        }
+        
+        // Check if there are price changes
+        const priceChangedItems = invalidItems.filter(item => item.errorType === 'price_changed');
+        if (priceChangedItems.length > 0) {
+          const priceChanges = priceChangedItems.map(item => 
+            `${item.name}: $${item.oldPrice?.toFixed(2)} → $${item.newPrice?.toFixed(2)}`
+          ).join(', ');
+          throw new Error(`The price has changed for the following items: ${priceChanges}. Please review your cart.`);
+        }
+        
+        // Generic error for other cases
+        throw new Error('Some items in your cart are no longer available. Please update your cart.');
+      }
+      
       // Create a unique order ID
       const orderId = uuidv4();
       

@@ -76,8 +76,13 @@ export default function CheckoutPage() {
       // Redirect to confirmation page with order ID
       router.push(`/checkout/confirmation/${orderId}`);
     } catch (error) {
-      console.error('Error creating order:', error);
-      alert('There was an error processing your order. Please try again.');
+      console.error(error);
+      
+      // Force redirect to cart for any error from validation process
+      // This ensures redirection happens regardless of the exact error message content
+      router.replace('/cart');
+      
+      // Set isSubmitting to false just in case redirection is delayed
       setIsSubmitting(false);
     }
   };
