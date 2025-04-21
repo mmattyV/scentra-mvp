@@ -8,6 +8,7 @@ import "@aws-amplify/ui-react/styles.css";
 import Image from "next/image";
 import AuthWrapper from '../ui/components/AuthWrapper';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import AdminNav from './admin/components/AdminNav';
 
 // Amplify is now configured at the root level in AuthenticatorProvider
 
@@ -216,6 +217,9 @@ export default function AdminLayout({
   return (
     <>
       <AdminHeader />
+      
+      {/* Admin Navigation */}
+      {isAdmin && <AdminNav />}
       
       {/* Main Content */}
       <main className="flex-grow">

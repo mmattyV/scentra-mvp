@@ -3,11 +3,15 @@
 import { useState, useEffect } from 'react';
 import type { Listing, UserData, FragranceDetails } from '@/app/types';
 import { STATUS_LABELS, STATUS_COLORS } from '@/app/types';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '@/amplify/data/resource';
 
 interface ListingDetailsModalProps {
   listing: Listing;
   sellerInfo: UserData | undefined;
   fragranceDetails: FragranceDetails;
+  buyerInfo?: UserData | null;
+  orderId?: string | null;
   onClose: () => void;
 }
 
@@ -15,10 +19,17 @@ export default function ListingDetailsModal({
   listing,
   sellerInfo,
   fragranceDetails,
+  buyerInfo = null,
+  orderId = null,
   onClose
 }: ListingDetailsModalProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [paymentPreference, setPaymentPreference] = useState<{
+    preferredMethod: string;
+    paymentHandle: string;
+  } | null>(null);
+  const [isLoadingPaymentPreference, setIsLoadingPaymentPreference] = useState(false);
   
   // Get image URL from S3
   useEffect(() => {
@@ -47,6 +58,39 @@ export default function ListingDetailsModal({
     
     fetchImageUrl();
   }, [listing.imageKey]);
+  
+  // Fetch seller payment preferences
+  useEffect(() => {
+    const fetchSellerPaymentPreferences = async () => {
+      if (!listing.sellerId) return;
+      
+      try {
+        setIsLoadingPaymentPreference(true);
+        const client = generateClient<Schema>({
+          authMode: 'userPool'
+        });
+        
+        const { data } = await client.models.SellerPaymentPreference.list({
+          filter: {
+            sellerId: { eq: listing.sellerId }
+          }
+        });
+        
+        if (data && data.length > 0) {
+          setPaymentPreference({
+            preferredMethod: data[0].preferredMethod,
+            paymentHandle: data[0].paymentHandle
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching seller payment preferences:', error);
+      } finally {
+        setIsLoadingPaymentPreference(false);
+      }
+    };
+    
+    fetchSellerPaymentPreferences();
+  }, [listing.sellerId]);
   
   // Format dates
   const formatDate = (dateString: string) => {
@@ -186,20 +230,88 @@ export default function ListingDetailsModal({
                       <span className="text-gray-500">Seller ID:</span>{' '}
                       <span className="font-mono text-sm">{sellerInfo.userId}</span>
                     </div>
+                    
+                    {/* Payment Preferences */}
+                    <div className="pt-2 mt-2 border-t border-gray-200">
+                      <span className="text-gray-500 font-medium">Payment Preferences:</span>
+                      {isLoadingPaymentPreference ? (
+                        <div className="flex items-center mt-1">
+                          <div className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full mr-2"></div>
+                          <span className="text-sm text-gray-500">Loading payment info...</span>
+                        </div>
+                      ) : paymentPreference ? (
+                        <div className="mt-1 space-y-1">
+                          <div>
+                            <span className="text-gray-500">Method:</span>{' '}
+                            <span className="capitalize">{paymentPreference.preferredMethod}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Handle:</span>{' '}
+                            <span>{paymentPreference.paymentHandle}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-1">
+                          <span className="text-sm text-gray-500">No payment preferences set</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <p className="text-gray-500">Seller information not available</p>
                 )}
               </div>
               
-              {/* Buyer Information (would be fetched in a real implementation) */}
+              {/* Buyer Information */}
               {['unconfirmed', 'shipping_to_scentra', 'verifying', 'shipping_to_buyer', 'completed'].includes(listing.status) && (
                 <div>
                   <h4 className="text-lg font-medium mb-2">Buyer Information</h4>
-                  <p className="text-sm text-gray-500 italic">
-                    In the full implementation, buyer details would be shown here for sold items.
-                    This would be fetched from order records linked to this listing.
-                  </p>
+                  {buyerInfo ? (
+                    <div className="space-y-2 bg-blue-50 p-3 rounded-md">
+                      <div>
+                        <span className="text-gray-500">Username:</span>{' '}
+                        <span className="font-medium">{buyerInfo.username}</span>
+                      </div>
+                      {buyerInfo.firstName && buyerInfo.lastName && (
+                        <div>
+                          <span className="text-gray-500">Name:</span>{' '}
+                          <span>{buyerInfo.firstName} {buyerInfo.lastName}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-gray-500">Email:</span>{' '}
+                        <span>{buyerInfo.email}</span>
+                      </div>
+                      {buyerInfo.phone && (
+                        <div>
+                          <span className="text-gray-500">Phone:</span>{' '}
+                          <span>{buyerInfo.phone}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-gray-500">Buyer ID:</span>{' '}
+                        <span className="font-mono text-sm">{buyerInfo.userId}</span>
+                      </div>
+                      {orderId && (
+                        <div>
+                          <span className="text-gray-500">Order ID:</span>{' '}
+                          <span className="font-mono text-sm">{orderId}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
+                      <p className="mb-1">
+                        {listing.status === 'unconfirmed' ? 
+                          'This listing has been purchased but buyer information is not available.' :
+                          'Buyer information is not available for this listing.'}
+                      </p>
+                      <p>
+                        <span className="font-medium">Order ID:</span>{' '}
+                        {orderId ? <span className="font-mono">{orderId}</span> : 'Not available'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

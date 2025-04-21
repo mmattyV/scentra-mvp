@@ -10,6 +10,7 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 import { useRouter } from 'next/navigation';
 import type { SaleItem, SaleStatus } from '@/app/types';
 import { STATUS_LABELS, STATUS_COLORS } from '@/app/types';
+import { updateListingWithStatusSync } from '@/app/utils/listingStatusSync';
 
 export default function SalesPage() {
   const router = useRouter();
@@ -28,6 +29,15 @@ export default function SalesPage() {
   // For shipping instructions popup
   const [showShippingInstructions, setShowShippingInstructions] = useState(false);
   const [confirmingItem, setConfirmingItem] = useState<SaleItem | null>(null);
+  
+  // Payment preferences state
+  const [showPaymentPreferences, setShowPaymentPreferences] = useState(false);
+  const [preferredMethod, setPreferredMethod] = useState<'paypal' | 'venmo'>('paypal');
+  const [paymentHandle, setPaymentHandle] = useState('');
+  const [isLoadingPaymentPreferences, setIsLoadingPaymentPreferences] = useState(false);
+  const [isSavingPaymentPreferences, setIsSavingPaymentPreferences] = useState(false);
+  const [paymentPreferenceError, setPaymentPreferenceError] = useState<string | null>(null);
+  const [paymentPreferenceId, setPaymentPreferenceId] = useState<string | null>(null);
 
   // Client-side initialization
   useEffect(() => {
@@ -60,6 +70,97 @@ export default function SalesPage() {
       setError('Authentication required. Please sign in to view your sales.');
     }
   }, [isClient, isAuthReady, user]);
+
+  // Fetch payment preferences when toggle is clicked
+  useEffect(() => {
+    if (showPaymentPreferences && user) {
+      fetchPaymentPreferences();
+    }
+  }, [showPaymentPreferences, user]);
+
+  const fetchPaymentPreferences = async () => {
+    if (!user?.userId) return;
+    
+    try {
+      setIsLoadingPaymentPreferences(true);
+      setPaymentPreferenceError(null);
+      
+      const client = generateClient<Schema>({
+        authMode: 'userPool'
+      });
+      
+      const { data } = await client.models.SellerPaymentPreference.list({
+        filter: {
+          sellerId: { eq: user.userId }
+        }
+      });
+      
+      if (data && data.length > 0) {
+        const preference = data[0];
+        setPreferredMethod(preference.preferredMethod as 'paypal' | 'venmo');
+        setPaymentHandle(preference.paymentHandle);
+        setPaymentPreferenceId(preference.id);
+      } else {
+        // No existing preferences found
+        setPreferredMethod('paypal');
+        setPaymentHandle('');
+        setPaymentPreferenceId(null);
+      }
+    } catch (error) {
+      console.error('Error fetching payment preferences:', error);
+      setPaymentPreferenceError('Failed to load payment preferences. Please try again.');
+    } finally {
+      setIsLoadingPaymentPreferences(false);
+    }
+  };
+
+  const handleSavePaymentPreferences = async () => {
+    if (!user?.userId || !paymentHandle.trim()) {
+      setPaymentPreferenceError('Please enter your payment handle');
+      return;
+    }
+    
+    try {
+      setIsSavingPaymentPreferences(true);
+      setPaymentPreferenceError(null);
+      
+      const client = generateClient<Schema>({
+        authMode: 'userPool'
+      });
+      
+      if (paymentPreferenceId) {
+        // Update existing preference
+        await client.models.SellerPaymentPreference.update({
+          id: paymentPreferenceId,
+          preferredMethod,
+          paymentHandle,
+          updatedAt: new Date().toISOString()
+        });
+      } else {
+        // Create new preference
+        const result = await client.models.SellerPaymentPreference.create({
+          sellerId: user.userId,
+          preferredMethod,
+          paymentHandle,
+          updatedAt: new Date().toISOString()
+        });
+        
+        // Set the ID from the result data object
+        if (result.data) {
+          setPaymentPreferenceId(result.data.id);
+        }
+      }
+      
+      // Success notification and close form
+      alert('Payment preferences saved successfully!');
+      setShowPaymentPreferences(false);
+    } catch (error) {
+      console.error('Error saving payment preferences:', error);
+      setPaymentPreferenceError('Failed to save payment preferences. Please try again.');
+    } finally {
+      setIsSavingPaymentPreferences(false);
+    }
+  };
 
   const fetchSales = async () => {
     try {
@@ -145,14 +246,9 @@ export default function SalesPage() {
     
     try {
       setIsConfirming(true);
-      const client = generateClient<Schema>({
-        authMode: 'userPool' // Explicitly use Cognito User Pool for auth
-      });
       
-      await client.models.Listing.update({
-        id: confirmingItem.id,
-        status: 'shipping_to_scentra'
-      });
+      // Use the status sync utility to ensure related order items are also updated
+      await updateListingWithStatusSync(confirmingItem.id, 'shipping_to_scentra', 'userPool');
       
       // Update local state
       setSales(prev => 
@@ -214,144 +310,245 @@ export default function SalesPage() {
   return (
     <div className="min-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-black mb-8">Sales</h1>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-10 w-10 border-2 border-black border-t-transparent"></div>
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-500">{error}</p>
-            <button 
-              onClick={fetchSales} 
-              className="mt-4 px-4 py-2 bg-black text-white rounded-md"
+        <div className="max-w-5xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold">Your Sales</h1>
+            <button
+              onClick={() => setShowPaymentPreferences(!showPaymentPreferences)}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
             >
-              Try Again
+              {showPaymentPreferences ? 'Hide Payment Settings' : 'Update Payment Settings'}
             </button>
           </div>
-        ) : sales.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-lg text-gray-600">You don't have any sales yet.</p>
-          </div>
-        ) : (
-          <div className="space-y-4 mb-12">
-            {sales.map((item) => {
-              if (!item || !item.fragranceId) {
-                return null; // Skip rendering this item if it or fragranceId is null/undefined
-              }
-              const fragrance = getFragranceDetails(item.fragranceId);
-              const saleStatus = item.status as SaleStatus;
+          
+          {/* Payment Preferences Form */}
+          {showPaymentPreferences && (
+            <div className="bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200">
+              <h2 className="text-xl font-semibold mb-4">Payment Preferences</h2>
               
-              return (
-                <div key={item.id} className="flex items-center gap-6 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-                  {/* Image */}
-                  <div className="relative w-24 h-24">
-                    <Image
-                      src={imageUrls[item.id] || '/placeholder-fragrance.jpg'}
-                      alt={fragrance.name}
-                      fill
-                      className="object-cover rounded-md"
+              {isLoadingPaymentPreferences ? (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-900 border-t-transparent"></div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Preferred Payment Method
+                    </label>
+                    <div className="flex space-x-4">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          checked={preferredMethod === 'paypal'}
+                          onChange={() => setPreferredMethod('paypal')}
+                          className="h-4 w-4 text-black focus:ring-black border-gray-300"
+                          disabled={isSavingPaymentPreferences}
+                        />
+                        <span>PayPal</span>
+                      </label>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          checked={preferredMethod === 'venmo'}
+                          onChange={() => setPreferredMethod('venmo')}
+                          className="h-4 w-4 text-black focus:ring-black border-gray-300"
+                          disabled={isSavingPaymentPreferences}
+                        />
+                        <span>Venmo</span>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="paymentHandle" className="block text-sm font-medium text-gray-700">
+                      {preferredMethod === 'paypal' ? 'PayPal Email or Username' : 'Venmo Username'}
+                    </label>
+                    <input
+                      id="paymentHandle"
+                      type="text"
+                      value={paymentHandle}
+                      onChange={(e) => setPaymentHandle(e.target.value)}
+                      placeholder={preferredMethod === 'paypal' ? 'Enter your PayPal email or username' : 'Enter your Venmo username (without @)'}
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-1 focus:ring-black focus:outline-none border-gray-300"
+                      disabled={isSavingPaymentPreferences}
                     />
                   </div>
-
-                  {/* Product Info */}
-                  <div className="flex-grow">
-                    <h3 className="text-lg font-medium text-black">{fragrance.name}</h3>
-                    <p className="text-sm text-gray-600">{fragrance.brand}</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {item.bottleSize} • {item.condition} 
-                      {item.condition === 'used' && item.percentRemaining && 
-                        ` • ${item.percentRemaining}% remaining`
-                      }
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">Product ID: {item.fragranceId}</p>
-                  </div>
-
-                  {/* Price */}
-                  <div className="text-lg font-medium text-gray-700">
-                    ${item.askingPrice?.toFixed(2)}
-                  </div>
-
-                  {/* Status */}
-                  <div className="flex flex-col items-end space-y-2">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[saleStatus] || 'bg-gray-100 text-gray-800'}`}>
-                      {STATUS_LABELS[saleStatus] || item.status}
-                    </span>
-
-                    {/* On Hold Message */}
-                    {item.status === 'on_hold' && (
-                      <div className="text-sm text-amber-700 mt-1">
-                        Awaiting payment
-                      </div>
-                    )}
-
-                    {/* Unconfirmed Sale Actions */}
-                    {item.status === 'unconfirmed' && (
-                      <div className="flex flex-col items-end space-y-2">
-                        {showConfirmation !== item.id ? (
-                          <button
-                            onClick={() => handleConfirmClick(item)}
-                            className="px-4 py-2 bg-black text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors"
-                          >
-                            Confirm Sale
-                          </button>
-                        ) : (
-                          <div className="mt-2 space-y-2">
-                            <p className="text-sm text-gray-700">Are you sure?</p>
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={handleConfirm}
-                                disabled={isConfirming}
-                                className="px-3 py-1 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 disabled:opacity-50"
-                              >
-                                Yes
-                              </button>
-                              <button
-                                onClick={() => setShowConfirmation(null)}
-                                className="px-3 py-1 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
-                              >
-                                No
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                  
+                  {paymentPreferenceError && (
+                    <div className="text-red-500 text-sm mt-2">{paymentPreferenceError}</div>
+                  )}
+                  
+                  <div className="flex justify-end space-x-4 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowPaymentPreferences(false)}
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                      disabled={isSavingPaymentPreferences}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSavePaymentPreferences}
+                      disabled={isSavingPaymentPreferences || !paymentHandle.trim()}
+                      className={`inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none ${
+                        isSavingPaymentPreferences || !paymentHandle.trim() ? 'opacity-70 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      {isSavingPaymentPreferences ? 'Saving...' : 'Save Payment Preferences'}
+                    </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-        
-        {/* Shipping Instructions Modal */}
-        {showShippingInstructions && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-              <h3 className="text-xl font-bold mb-4">Shipping Instructions</h3>
-              <p className="mb-4">
-                Please package your fragrance securely and ship it to Scentra for verification at the following address:
-              </p>
-              <div className="bg-gray-50 p-4 rounded-md mb-4">
-                <p className="font-medium">Scentra Verification Center</p>
-                <p>123 Verification Way</p>
-                <p>San Francisco, CA 94103</p>
-                <p className="mt-2">Order ID: #{confirmingItem?.id.substring(0, 8)}</p>
+              )}
+            </div>
+          )}
+          
+          {error ? (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
               </div>
-              <p className="text-sm text-gray-600 mb-4">
-                Please include the Order ID on your shipping label. Once we receive and verify the product, we'll update the status and ship it to the buyer.
-              </p>
+            </div>
+          ) : isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-black"></div>
+            </div>
+          ) : sales.length === 0 ? (
+            <div className="bg-gray-50 rounded-lg p-8 text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No sales yet</h3>
+              <p className="text-gray-500 mb-6">When you sell items, they will appear here.</p>
+              <button
+                onClick={() => router.push('/sell/new')}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-black hover:bg-gray-800 focus:outline-none"
+              >
+                Create a New Listing
+              </button>
+            </div>
+          ) : (
+            <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+              <ul className="divide-y divide-gray-200">
+                {sales.map((item) => {
+                  const fragrance = getFragranceDetails(item.fragranceId);
+                  return (
+                    <li key={item.id} className="p-4 hover:bg-gray-50">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0 relative h-16 w-16 rounded-md overflow-hidden">
+                          {imageUrls[item.id] ? (
+                            <Image
+                              src={imageUrls[item.id]}
+                              alt={fragrance.name}
+                              fill
+                              style={{ objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <div className="h-full w-full bg-gray-200 flex items-center justify-center">
+                              <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {fragrance.brand} - {fragrance.name}
+                          </p>
+                          <p className="text-sm text-gray-500 truncate">
+                            {item.bottleSize} • {item.condition === 'new' ? 'New' : `Used (${item.percentRemaining}% remaining)`}
+                          </p>
+                          <div className="mt-1">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[item.status as SaleStatus] || 'bg-gray-100 text-gray-800'}`}>
+                              {STATUS_LABELS[item.status as SaleStatus] || item.status}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex-shrink-0 text-right">
+                          <p className="text-sm font-semibold text-gray-900">${parseFloat(item.askingPrice.toString()).toFixed(2)}</p>
+                          
+                          {/* Action buttons based on status */}
+                          {item.status === 'sold' as SaleStatus && !showConfirmation && (
+                            <button
+                              onClick={() => handleConfirmClick(item)}
+                              className="mt-1 text-xs text-indigo-600 hover:text-indigo-800"
+                            >
+                              Confirm Sale
+                            </button>
+                          )}
+                          
+                          {/* Confirmation dialog */}
+                          {showConfirmation === item.id && (
+                            <div className="mt-2 text-xs">
+                              <p className="mb-1 text-gray-700">Confirm this sale?</p>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={handleConfirm}
+                                  disabled={isConfirming}
+                                  className="px-2 py-1 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                                >
+                                  {isConfirming ? '...' : 'Yes'}
+                                </button>
+                                <button
+                                  onClick={() => setShowConfirmation(null)}
+                                  disabled={isConfirming}
+                                  className="px-2 py-1 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:opacity-50"
+                                >
+                                  No
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+        </div>
+      </main>
+      
+      {/* Shipping Instructions Modal */}
+      {showShippingInstructions && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold mb-4">Shipping Instructions</h3>
+            <div className="prose prose-sm">
+              <p>Please follow these steps to ship your item to Scentra:</p>
+              <ol className="list-decimal pl-5 space-y-2">
+                <li>Package your item securely to prevent damage during shipping.</li>
+                <li>Print a shipping label addressed to our verification center.</li>
+                <li>Drop off your package at any USPS, UPS, or FedEx location.</li>
+                <li>Keep your tracking number for reference.</li>
+              </ol>
+              <p className="font-semibold mt-4">Shipping Address:</p>
+              <div className="bg-gray-50 p-3 rounded mb-4">
+                <p>Scentra Verification Center<br />
+                123 Fragrance Blvd<br />
+                New York, NY 10001</p>
+              </div>
+              <p className="text-sm text-gray-500">We'll notify you once we receive and verify your item. Payment will be processed after verification is complete.</p>
+            </div>
+            <div className="mt-6 flex justify-end">
               <button
                 onClick={closeShippingInstructions}
-                className="w-full px-4 py-2 bg-black text-white rounded-md font-medium hover:bg-gray-800"
+                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
               >
-                I Understand
+                Close
               </button>
             </div>
           </div>
-        )}
-      </main>
+        </div>
+      )}
     </div>
   );
 }

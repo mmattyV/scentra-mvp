@@ -19,6 +19,22 @@ const schema = a.schema({
       allow.group("ADMINS")
     ]),
 
+  // New model for seller payment preferences
+  SellerPaymentPreference: a
+    .model({
+      sellerId: a.string().required(),
+      preferredMethod: a.string().required(), // "paypal" or "venmo"
+      paymentHandle: a.string().required(), // Username or email for the payment method
+      updatedAt: a.datetime().required(),
+    })
+    .authorization((allow) => [
+      // Only authenticated users can access their own payment preferences
+      allow.authenticated(),
+      // Admin group has full access
+      allow.group("ADMINS"),
+      // Application-level authorization will ensure users can only access their own preferences
+    ]),
+
   Listing: a
     .model({
       sellerId: a.string().required(),
@@ -30,6 +46,7 @@ const schema = a.schema({
       status: a.string().default("active"), // "active", "sold", "removed"
       imageKey: a.string().required(), // S3 key for the image in Amplify Storage
       createdAt: a.datetime().required(),
+      updatedAt: a.datetime(),
     })
     .authorization((allow) => [
       // Public API key users can only read
@@ -40,6 +57,53 @@ const schema = a.schema({
       allow.group("ADMINS"),
       // For regular users, we'll handle additional authorization at the application level
       // by comparing the current user's ID with the sellerId field
+    ]),
+    
+  // Order model for checkout
+  Order: a
+    .model({
+      buyerId: a.string().required(),
+      shippingAddress: a.json().required(),
+      subtotal: a.float().required(),
+      total: a.float().required(),
+      paymentStatus: a.string().required(), // 'awaiting_payment', 'paid', 'refunded'
+      orderStatus: a.string().required(), // 'unconfirmed', 'shipping_to_scentra', 'verifying', 'shipping_to_buyer', 'completed'
+      paymentMethod: a.string().required(), // 'venmo', 'paypal'
+      paymentInstructions: a.string().required(),
+      createdAt: a.string().required(),
+      updatedAt: a.string(),
+      notes: a.string(),
+    })
+    .authorization((allow) => [
+      // Only authenticated users can access orders
+      allow.authenticated(),
+      // Admin group has full access
+      allow.group("ADMINS"),
+      // Application-level authorization will ensure users can only see their own orders
+    ]),
+    
+  // OrderItem model for individual items in an order
+  OrderItem: a
+    .model({
+      orderId: a.string().required(),
+      listingId: a.string().required(),
+      sellerId: a.string().required(),
+      fragranceId: a.string().required(),
+      fragranceName: a.string().required(),
+      brand: a.string().required(),
+      bottleSize: a.string().required(),
+      condition: a.string().required(),
+      percentRemaining: a.integer(),
+      price: a.float().required(),
+      imageUrl: a.string().required(),
+      status: a.string().required(),
+    })
+    .authorization((allow) => [
+      // Only authenticated users can access order items
+      allow.authenticated(),
+      // Admin group has full access
+      allow.group("ADMINS"),
+      // Application-level authorization will ensure users can only see their own order items
     ]),
     
   // Custom query to get user attributes (admin only)

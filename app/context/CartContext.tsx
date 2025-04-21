@@ -5,8 +5,9 @@ import { useAuthenticator } from '@aws-amplify/ui-react';
 import { v4 as uuidv4 } from 'uuid';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
-import type { CartItem, Listing } from '@/app/types';
+import type { CartItem, Listing, ShippingAddress, SaleStatus } from '@/app/types';
 import { FRAGRANCES } from '@/app/utils/fragrance-data';
+import { updateListingWithStatusSync } from '@/app/utils/listingStatusSync';
 
 // Define the Cart Context shape
 interface CartContextType {
@@ -19,6 +20,7 @@ interface CartContextType {
   validateCartItems: () => Promise<boolean>;
   isValidating: boolean;
   removeUnavailableItems: () => void;
+  createOrder: (shippingAddress: ShippingAddress, paymentMethod: 'venmo' | 'paypal') => Promise<string>;
 }
 
 // Create the context with a default empty implementation
@@ -32,6 +34,7 @@ const CartContext = createContext<CartContextType>({
   validateCartItems: async () => false,
   isValidating: false,
   removeUnavailableItems: () => {},
+  createOrder: async () => '',
 });
 
 // Provider props type
@@ -203,6 +206,211 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     setItems(prev => prev.filter(item => item.isAvailable));
   };
 
+  // Create an order from cart items
+  const createOrder = async (shippingAddress: ShippingAddress, paymentMethod: 'venmo' | 'paypal'): Promise<string> => {
+    if (!user) {
+      throw new Error('User must be logged in to create an order');
+    }
+    
+    if (items.length === 0) {
+      throw new Error('Cart is empty');
+    }
+    
+    try {
+      // Generate Amplify client with user authentication
+      const client = generateClient<Schema>({
+        authMode: 'userPool'
+      });
+      
+      // Create a unique order ID
+      const orderId = uuidv4();
+      
+      // Calculate verification fee (3% of subtotal)
+      const verificationFee = subtotal * 0.03;
+      
+      // Calculate total including verification fee
+      const total = subtotal + verificationFee;
+      
+      // Convert cart items to order items
+      const orderItems = items.map(item => ({
+        id: uuidv4(),
+        orderId,
+        listingId: item.listingId,
+        sellerId: item.sellerId,
+        fragranceId: item.fragranceId,
+        fragranceName: item.fragranceName,
+        brand: item.brand,
+        bottleSize: item.bottleSize,
+        condition: item.condition,
+        percentRemaining: item.percentRemaining,
+        price: item.currentPrice,
+        imageUrl: item.imageUrl,
+        status: 'unconfirmed' as SaleStatus
+      }));
+      
+      // Create payment instructions based on payment method
+      const paymentInstructions = paymentMethod === 'venmo' 
+        ? 'Please send payment to @Scentra with your Order ID in the memo.'
+        : 'Please send payment to payment@scentra.com with your Order ID in the memo.';
+      
+      // Create the serialized version of the shipping address for storage
+      const serializedShippingAddress = JSON.stringify(shippingAddress);
+      
+      try {
+        // Step 1: Re-validate all listings to ensure they're still active
+        const listingValidations = await Promise.all(
+          items.map(async (item) => {
+            try {
+              const { data: listing } = await client.models.Listing.get({
+                id: item.listingId
+              });
+              
+              if (!listing || listing.status !== 'active') {
+                return { id: item.listingId, isValid: false };
+              }
+              
+              return { id: item.listingId, isValid: true };
+            } catch (error) {
+              console.error(`Error validating listing ${item.listingId}:`, error);
+              return { id: item.listingId, isValid: false };
+            }
+          })
+        );
+        
+        // Check if all listings are valid
+        const invalidListings = listingValidations.filter(item => !item.isValid);
+        if (invalidListings.length > 0) {
+          throw new Error('Some items are no longer available for purchase');
+        }
+
+        // Step 2: Create order in Amplify DataStore
+        await client.models.Order.create({
+          id: orderId,
+          buyerId: user.username,
+          shippingAddress: serializedShippingAddress,
+          subtotal,
+          total,
+          paymentStatus: 'awaiting_payment',
+          orderStatus: 'pending',
+          paymentMethod,
+          paymentInstructions,
+          notes: `Includes 3% verification fee: $${verificationFee.toFixed(2)}`,
+          createdAt: new Date().toISOString()
+        });
+        
+        // Step 3: Create order items
+        for (const item of orderItems) {
+          try {
+            await client.models.OrderItem.create({
+              id: item.id,
+              orderId: item.orderId,
+              listingId: item.listingId,
+              sellerId: item.sellerId,
+              fragranceId: item.fragranceId,
+              fragranceName: item.fragranceName,
+              brand: item.brand,
+              bottleSize: item.bottleSize,
+              condition: item.condition,
+              percentRemaining: item.percentRemaining,
+              price: item.price,
+              imageUrl: item.imageUrl,
+              status: item.status
+            });
+          } catch (error) {
+            console.error(`Error creating order item for ${item.id}:`, error);
+            // Continue with other items even if one fails
+          }
+        }
+        
+        // Step 4: Only after order and items are created, update listing statuses to on_hold
+        // Use optimistic concurrency control with a two-step process
+        const statusUpdateResults = await Promise.all(
+          items.map(async (item) => {
+            try {
+              // First, get the current listing to check its status
+              const { data: currentListing } = await client.models.Listing.get({
+                id: item.listingId
+              });
+              
+              // Only update if the listing is still active
+              if (!currentListing || currentListing.status !== 'active') {
+                return { id: item.listingId, success: false, message: 'Item is no longer available' };
+              }
+              
+              // If it's active, update it to on_hold
+              try {
+                await updateListingWithStatusSync(item.listingId, 'on_hold', 'userPool');
+              } catch (error) {
+                return { id: item.listingId, success: false, message: error instanceof Error ? error.message : 'Unknown error' };
+              }
+              
+              return { id: item.listingId, success: true };
+            } catch (error) {
+              console.error(`Error updating listing status for ${item.listingId}:`, error);
+              return { id: item.listingId, success: false, message: error instanceof Error ? error.message : 'Unknown error' };
+            }
+          })
+        );
+        
+        // Check if any status updates failed due to concurrency issues
+        const failedUpdates = statusUpdateResults.filter(result => !result.success);
+        if (failedUpdates.length > 0) {
+          // Some items were purchased by someone else between our validation and update
+          // We need to roll back and clean up the order we just created
+          
+          try {
+            // Delete the created order
+            await client.models.Order.delete({
+              id: orderId
+            });
+            
+            // Delete all created order items
+            for (const item of orderItems) {
+              try {
+                await client.models.OrderItem.delete({
+                  id: item.id
+                });
+              } catch (deleteError) {
+                console.error(`Error deleting order item ${item.id} during rollback:`, deleteError);
+              }
+            }
+            
+            // Get names of items that were no longer available
+            const unavailableItems = await Promise.all(
+              failedUpdates.map(async (failed) => {
+                try {
+                  // Get the name of the failed item for a better error message
+                  const failedItem = items.find(item => item.listingId === failed.id);
+                  return failedItem ? failedItem.fragranceName : 'Unknown item';
+                } catch (error) {
+                  return 'Unknown item';
+                }
+              })
+            );
+            
+            // Throw a detailed error for the user
+            throw new Error(`Some items were purchased by another user while you were checking out: ${unavailableItems.join(', ')}`);
+          } catch (rollbackError) {
+            console.error('Error during checkout rollback:', rollbackError);
+            throw new Error('Another user purchased one or more items in your cart. Your order was not completed.');
+          }
+        }
+        
+        // Step 5: Clear the cart after successful order creation
+        clearCart();
+        
+        // Return the order ID for redirect to confirmation page
+        return orderId;
+      } catch (error) {
+        console.error('Error creating order:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to create order');
+      }
+    } catch (error) {
+      console.error('Error creating order:', error);
+      throw new Error('Failed to create order. Please try again.');
+    }
+  };
+
   // Context value
   const contextValue: CartContextType = {
     items,
@@ -213,7 +421,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     subtotal,
     validateCartItems,
     isValidating,
-    removeUnavailableItems
+    removeUnavailableItems,
+    createOrder
   };
 
   return (

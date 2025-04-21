@@ -27,11 +27,19 @@ export default function NewListingPage() {
   const [condition, setCondition] = useState('new');
   const [percentRemaining, setPercentRemaining] = useState(100);
   const [askingPrice, setAskingPrice] = useState('');
+  
+  // Payment method state
+  const [preferredMethod, setPreferredMethod] = useState<'paypal' | 'venmo'>('paypal');
+  const [paymentHandle, setPaymentHandle] = useState('');
+  const [hasExistingPaymentPreference, setHasExistingPaymentPreference] = useState(false);
+  const [isLoadingPaymentPreferences, setIsLoadingPaymentPreferences] = useState(true);
+  
   const [validationErrors, setValidationErrors] = useState<{
     fragranceId?: string;
     bottleSize?: string;
     askingPrice?: string;
     image?: string;
+    paymentHandle?: string;
   }>({});
 
   // Image handling state
@@ -61,6 +69,39 @@ export default function NewListingPage() {
     
     checkAuthStatus();
   }, [isClient]);
+
+  // Fetch existing payment preferences
+  useEffect(() => {
+    const fetchPaymentPreferences = async () => {
+      if (!isClient || !isAuthReady || !user) return;
+      
+      try {
+        setIsLoadingPaymentPreferences(true);
+        const client = generateClient<Schema>({
+          authMode: 'userPool'
+        });
+        
+        const { data } = await client.models.SellerPaymentPreference.list({
+          filter: {
+            sellerId: { eq: user.userId }
+          }
+        });
+        
+        if (data && data.length > 0) {
+          const preference = data[0];
+          setPreferredMethod(preference.preferredMethod as 'paypal' | 'venmo');
+          setPaymentHandle(preference.paymentHandle);
+          setHasExistingPaymentPreference(true);
+        }
+      } catch (error) {
+        console.error('Error fetching payment preferences:', error);
+      } finally {
+        setIsLoadingPaymentPreferences(false);
+      }
+    };
+    
+    fetchPaymentPreferences();
+  }, [isClient, isAuthReady, user]);
 
   // Render redirect if no user after auth check is completed
   if (isClient && isAuthReady && !user) {
@@ -133,6 +174,7 @@ export default function NewListingPage() {
       bottleSize?: string;
       askingPrice?: string;
       image?: string;
+      paymentHandle?: string;
     } = {};
 
     if (!fragranceId) {
@@ -153,6 +195,10 @@ export default function NewListingPage() {
     
     if (!selectedImage) {
       errors.image = 'Please upload a product image';
+    }
+    
+    if (!paymentHandle) {
+      errors.paymentHandle = 'Please enter your payment handle';
     }
 
     setValidationErrors(errors);
@@ -231,10 +277,45 @@ export default function NewListingPage() {
         }),
       });
       
-      // Create the listing with the image key - specify userPool auth mode
+      // Create or update the seller payment preference
       const client = generateClient<Schema>({
-        authMode: 'userPool' // Explicitly use Cognito User Pool for auth
+        authMode: 'userPool'
       });
+      
+      // Save or update payment preferences
+      if (hasExistingPaymentPreference) {
+        // Get existing preference to update
+        const { data: existingPrefs } = await client.models.SellerPaymentPreference.list({
+          filter: { sellerId: { eq: user.userId } }
+        });
+        
+        if (existingPrefs && existingPrefs.length > 0) {
+          await client.models.SellerPaymentPreference.update({
+            id: existingPrefs[0].id,
+            preferredMethod,
+            paymentHandle,
+            updatedAt: new Date().toISOString()
+          });
+        } else {
+          // Create new if couldn't find the existing one
+          await client.models.SellerPaymentPreference.create({
+            sellerId: user.userId,
+            preferredMethod,
+            paymentHandle,
+            updatedAt: new Date().toISOString()
+          });
+        }
+      } else {
+        // Create new preference
+        await client.models.SellerPaymentPreference.create({
+          sellerId: user.userId,
+          preferredMethod,
+          paymentHandle,
+          updatedAt: new Date().toISOString()
+        });
+      }
+      
+      // Create the listing with the image key - specify userPool auth mode
       await client.models.Listing.create({
         sellerId: user.userId,
         fragranceId,
@@ -429,6 +510,71 @@ export default function NewListingPage() {
               </div>
               {validationErrors.image && (
                 <p className="text-red-500 text-sm mt-1">{validationErrors.image}</p>
+              )}
+            </div>
+            
+            {/* Payment Method Section */}
+            <div className="space-y-2 border-t pt-6 mt-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                {hasExistingPaymentPreference 
+                  ? 'Your Payment Information' 
+                  : 'Set Your Payment Information'}
+              </h2>
+              
+              {isLoadingPaymentPreferences ? (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-900 border-t-transparent"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <span className="block text-sm font-medium text-gray-700 mb-2">Preferred Payment Method</span>
+                    <div className="flex space-x-4">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          checked={preferredMethod === 'paypal'}
+                          onChange={() => setPreferredMethod('paypal')}
+                          className="h-4 w-4 text-black focus:ring-black border-gray-300"
+                        />
+                        <span>PayPal</span>
+                      </label>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          checked={preferredMethod === 'venmo'}
+                          onChange={() => setPreferredMethod('venmo')}
+                          className="h-4 w-4 text-black focus:ring-black border-gray-300"
+                        />
+                        <span>Venmo</span>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 mt-4">
+                    <label htmlFor="paymentHandle" className="block text-sm font-medium text-gray-700">
+                      {preferredMethod === 'paypal' ? 'PayPal Email or Username' : 'Venmo Username'}
+                    </label>
+                    <input
+                      id="paymentHandle"
+                      type="text"
+                      value={paymentHandle}
+                      onChange={(e) => setPaymentHandle(e.target.value)}
+                      placeholder={preferredMethod === 'paypal' ? 'Enter your PayPal email or username' : 'Enter your Venmo username (without @)'}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-1 focus:ring-black focus:outline-none ${
+                        validationErrors.paymentHandle ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    />
+                    {validationErrors.paymentHandle && (
+                      <p className="text-red-500 text-sm mt-1">{validationErrors.paymentHandle}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      {hasExistingPaymentPreference 
+                        ? 'Your payment information will be updated with this submission' 
+                        : 'Your payment information will be saved for future listings'}
+                    </p>
+                  </div>
+                </>
               )}
             </div>
             

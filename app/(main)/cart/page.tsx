@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/app/context/CartContext';
 import { useAuthenticator } from '@aws-amplify/ui-react';
+import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
   const { user } = useAuthenticator((context) => [context.user]);
@@ -17,6 +18,7 @@ export default function CartPage() {
     isValidating,
     removeUnavailableItems 
   } = useCart();
+  const router = useRouter();
   
   const [isClient, setIsClient] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -221,33 +223,41 @@ export default function CartPage() {
             </div>
             
             <button
-              onClick={() => {
-                // Validate cart before checkout
-                const validateBeforeCheckout = async () => {
-                  // Show loading state
-                  setIsValidatingCheckout(true);
+              onClick={async () => {
+                setIsValidatingCheckout(true);
+                try {
+                  // Validate cart items before proceeding to checkout
+                  const changes = await validateCartItems();
+                  setHasChanges(changes);
                   
-                  try {
-                    // Revalidate cart for price changes and availability
-                    const hasChanges = await validateCartItems();
-                    
-                    if (hasChanges) {
-                      // Update UI to show validation results
-                      setHasChanges(true);
-                      alert('Your cart has been updated with the latest prices and availability. Please review changes before proceeding.');
-                    } else {
-                      // No changes detected, proceed to checkout (placeholder for now)
-                      alert('Checkout functionality will be implemented in a future update');
-                    }
-                  } catch (error) {
-                    console.error('Error validating cart:', error);
-                    alert('There was an error validating your cart. Please try again.');
-                  } finally {
-                    setIsValidatingCheckout(false);
+                  // Prevent checkout if there are unavailable items
+                  const hasUnavailableItems = items.some(item => !item.isAvailable);
+                  
+                  if (hasUnavailableItems) {
+                    alert('Please remove unavailable items before proceeding to checkout.');
+                    return;
                   }
-                };
-                
-                validateBeforeCheckout();
+                  
+                  // Prevent checkout if cart is empty
+                  if (items.length === 0) {
+                    alert('Your cart is empty.');
+                    return;
+                  }
+                  
+                  // Prevent checkout of own listings
+                  if (hasOwnItems) {
+                    alert('You cannot purchase your own listings.');
+                    return;
+                  }
+                  
+                  // Proceed to checkout
+                  router.push('/checkout');
+                } catch (error) {
+                  console.error('Error validating cart:', error);
+                  alert('There was an error validating your cart. Please try again.');
+                } finally {
+                  setIsValidatingCheckout(false);
+                }
               }}
               disabled={items.some(item => !item.isAvailable) || items.length === 0 || hasOwnItems || isValidating || isValidatingCheckout}
               className={`w-full py-4 rounded-lg font-medium transition-colors ${

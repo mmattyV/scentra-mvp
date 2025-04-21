@@ -252,6 +252,18 @@ export default function Header() {
                       </ProtectedLink>
                     </>
                   )}
+                  <Link
+                    href="/faq"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    FAQ
+                  </Link>
+                  <Link
+                    href="/about"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    About Us
+                  </Link>
                   <div className="border-t border-gray-100 mt-2 pt-2 px-4 py-2 text-sm text-gray-700">
                     Contact Us:{" "}
                     <a
