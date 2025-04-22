@@ -3,8 +3,7 @@
 import { 
   Authenticator, 
   ThemeProvider, 
-  Theme, 
-  useTheme,
+  Theme,
   View,
   Button,
   useAuthenticator
