@@ -77,6 +77,7 @@ export default function CheckoutPage() {
       router.push(`/checkout/confirmation/${orderId}`);
     } catch (error) {
       console.error(error);
+      alert('There was an error processing your order. Please try again.');
       
       // Force redirect to cart for any error from validation process
       // This ensures redirection happens regardless of the exact error message content

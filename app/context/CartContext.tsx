@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { v4 as uuidv4 } from 'uuid';
 import { generateClient } from 'aws-amplify/data';
@@ -46,7 +46,7 @@ interface CartProviderProps {
 const CART_STORAGE_KEY = 'scentra-cart-items';
 
 // Cart Provider Component
-export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
+export const CartProvider = ({ children }: CartProviderProps) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [isValidating, setIsValidating] = useState(false);

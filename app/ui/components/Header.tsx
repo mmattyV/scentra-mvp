@@ -12,7 +12,6 @@ import CartIcon from "./cart/CartIcon";
 export default function Header() {
   const [isSellMenuOpen, setIsSellMenuOpen] = useState(false);
   const [isBuyerMenuOpen, setIsBuyerMenuOpen] = useState(false);
-  const [cartCount] = useState(0); // This will be connected to backend later
   const [userName, setUserName] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const { authStatus, signOut, user } = useAuthenticator(context => [context.authStatus, context.user]);

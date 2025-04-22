@@ -10,13 +10,13 @@ import {
   useAuthenticator
 } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import React from "react";
+import { ReactNode, Fragment } from "react";
 import styles from './AuthWrapper.module.css';
 
 export default function AuthWrapper({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   // Create a custom theme for the Authenticator
   const theme: Theme = {
@@ -204,7 +204,7 @@ export default function AuthWrapper({
             },
           }}
         >
-          {() => <React.Fragment>{children}</React.Fragment>}
+          {() => <Fragment>{children}</Fragment>}
         </Authenticator>
       </div>
     </ThemeProvider>

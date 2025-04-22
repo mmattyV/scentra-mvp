@@ -8,8 +8,6 @@ import { uploadData, getUrl } from "aws-amplify/storage";
 import type { Schema } from "@/amplify/data/resource";
 import Image from 'next/image';
 import { FRAGRANCES } from '@/app/utils/fragrance-data';
-import { Amplify } from 'aws-amplify';
-import outputs from "@/amplify_outputs.json";
 import { fetchAuthSession } from 'aws-amplify/auth';
 
 // Amplify is now configured at the root level in AuthenticatorProvider

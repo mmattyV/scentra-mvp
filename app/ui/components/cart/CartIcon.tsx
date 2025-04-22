@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/app/context/CartContext';
 
@@ -8,7 +8,7 @@ interface CartIconProps {
   className?: string;
 }
 
-export const CartIcon: React.FC<CartIconProps> = ({ className = '' }) => {
+export const CartIcon = ({ className = '' }: CartIconProps) => {
   const { items } = useCart();
   const [isClient, setIsClient] = useState(false);
   const [animateCount, setAnimateCount] = useState(false);
