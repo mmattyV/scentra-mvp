@@ -11,33 +11,27 @@ import { updateListingWithStatusSync } from '@/app/utils/listingStatusSync';
 import type { Schema } from '@/amplify/data/resource';
 
 import AdminTable from '../components/AdminTable';
-import StatusFilter from '../components/StatusFilter';
+import ListingFilterBar from '../components/ListingFilterBar';
 import StatusChangeModal from '../components/StatusChangeModal';
 import ListingDetailsModal from '../components/ListingDetailsModal';
 
 // Define the valid status options based on current status
 const getValidStatusTransitions = (currentStatus: string): string[] => {
-  // Define which statuses a listing can be changed to based on current status
-  switch(currentStatus) {
-    case 'active':
-      return ['removed', 'on_hold', 'unconfirmed'];
-    case 'on_hold':
-      return ['active', 'unconfirmed', 'removed'];
-    case 'unconfirmed':
-      return ['shipping_to_scentra', 'removed'];
-    case 'shipping_to_scentra':
-      return ['verifying', 'removed'];
-    case 'verifying':
-      return ['shipping_to_buyer', 'removed'];
-    case 'shipping_to_buyer':
-      return ['completed', 'removed'];
-    case 'completed':
-      return ['removed'];
-    case 'removed':
-      return []; // Cannot change status once removed
-    default:
-      return ['removed'];
-  }
+  // Return all possible statuses regardless of current status
+  // This allows changing from any status to any other status
+  const allStatuses = [
+    'active',
+    'on_hold',
+    'unconfirmed',
+    'shipping_to_scentra',
+    'verifying',
+    'shipping_to_buyer',
+    'completed',
+    'removed'
+  ];
+  
+  // Filter out the current status to prevent changing to the same status
+  return allStatuses.filter(status => status !== currentStatus);
 };
 
 export default function AdminDashboard() {
@@ -337,88 +331,88 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-4">Listings Management</h1>
+    <div className="min-h-screen bg-white">
+      <main className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-black mb-8">Listings Management</h1>
         
         {/* Status Filter */}
-        <StatusFilter 
-          currentFilter={statusFilter} 
-          onFilterChange={setStatusFilter} 
+        <ListingFilterBar 
+          statusFilter={statusFilter} 
+          onStatusFilterChange={setStatusFilter} 
         />
-      </div>
-      
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-          <p className="font-bold">Error</p>
-          <p>{error}</p>
-        </div>
-      )}
-      
-      {/* Loading State */}
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-black border-t-transparent"></div>
-        </div>
-      ) : (
-        listings.length === 0 ? (
-          <div className="bg-white p-8 rounded-lg shadow text-center">
-            <p className="text-gray-500">No listings found for the selected filter.</p>
+        
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+            <p className="font-bold">Error</p>
+            <p>{error}</p>
+          </div>
+        )}
+        
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-2 border-black border-t-transparent"></div>
           </div>
         ) : (
-          <AdminTable 
-            listings={listings}
-            sellerInfo={sellerInfo}
-            getFragranceDetails={(fragranceId: string) => {
-              return FRAGRANCES.find(f => f.productId === fragranceId) || {
-                productId: fragranceId,
-                name: 'Unknown',
-                brand: 'Unknown'
-              };
+          listings.length === 0 ? (
+            <div className="bg-white p-8 rounded-lg shadow text-center">
+              <p className="text-gray-500">No listings found for the selected filter.</p>
+            </div>
+          ) : (
+            <AdminTable 
+              listings={listings}
+              sellerInfo={sellerInfo}
+              getFragranceDetails={(fragranceId: string) => {
+                return FRAGRANCES.find(f => f.productId === fragranceId) || {
+                  productId: fragranceId,
+                  name: 'Unknown',
+                  brand: 'Unknown'
+                };
+              }}
+              onStatusChange={(listing: Listing) => {
+                setSelectedListing(listing);
+                setIsStatusModalOpen(true);
+              }}
+              onViewDetails={(listing: Listing) => {
+                handleViewListingDetails(listing);
+              }}
+            />
+          )
+        )}
+        
+        {/* Status Change Modal */}
+        {isStatusModalOpen && selectedListing && (
+          <StatusChangeModal
+            listing={selectedListing}
+            validStatusOptions={getValidStatusTransitions(selectedListing.status)}
+            onClose={() => {
+              setIsStatusModalOpen(false);
+              setSelectedListing(null);
             }}
-            onStatusChange={(listing: Listing) => {
-              setSelectedListing(listing);
-              setIsStatusModalOpen(true);
+            onStatusChange={changeListingStatus}
+          />
+        )}
+        
+        {/* Details Modal */}
+        {isDetailsModalOpen && selectedListing && (
+          <ListingDetailsModal
+            listing={selectedListing}
+            sellerInfo={sellerInfo[selectedListing.sellerId]}
+            fragranceDetails={FRAGRANCES.find(f => f.productId === (selectedListing as any).fragranceId) || {
+              productId: (selectedListing as any).fragranceId || 'Unknown',
+              name: (selectedListing as any).fragranceName || 'Unknown',
+              brand: (selectedListing as any).brand || 'Unknown'
             }}
-            onViewDetails={(listing: Listing) => {
-              handleViewListingDetails(listing);
+            buyerInfo={buyerInfo}
+            orderId={orderInfo?.id}
+            onClose={() => {
+              setIsDetailsModalOpen(false);
+              setSelectedListing(null);
             }}
           />
-        )
-      )}
-      
-      {/* Status Change Modal */}
-      {isStatusModalOpen && selectedListing && (
-        <StatusChangeModal
-          listing={selectedListing}
-          validStatusOptions={getValidStatusTransitions(selectedListing.status)}
-          onClose={() => {
-            setIsStatusModalOpen(false);
-            setSelectedListing(null);
-          }}
-          onStatusChange={changeListingStatus}
-        />
-      )}
-      
-      {/* Details Modal */}
-      {isDetailsModalOpen && selectedListing && (
-        <ListingDetailsModal
-          listing={selectedListing}
-          sellerInfo={sellerInfo[selectedListing.sellerId]}
-          fragranceDetails={FRAGRANCES.find(f => f.productId === (selectedListing as any).fragranceId) || {
-            productId: (selectedListing as any).fragranceId || 'Unknown',
-            name: (selectedListing as any).fragranceName || 'Unknown',
-            brand: (selectedListing as any).brand || 'Unknown'
-          }}
-          buyerInfo={buyerInfo}
-          orderId={orderInfo?.id}
-          onClose={() => {
-            setIsDetailsModalOpen(false);
-            setSelectedListing(null);
-          }}
-        />
-      )}
+        )}
+      </main>
     </div>
   );
 }

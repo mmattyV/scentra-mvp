@@ -20,20 +20,18 @@ export default function OrderStatusModal({
   
   // Define valid status transitions
   const getValidStatusOptions = (currentStatus: string): string[] => {
-    switch (currentStatus) {
-      case 'pending':
-        return ['processing', 'cancelled'];
-      case 'processing':
-        return ['shipped', 'cancelled'];
-      case 'shipped':
-        return ['delivered', 'cancelled'];
-      case 'delivered':
-        return ['cancelled']; // Can still cancel if needed
-      case 'cancelled':
-        return ['pending']; // Can reactivate if cancelled by mistake
-      default:
-        return ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
-    }
+    // Return all possible statuses regardless of current status
+    // This allows changing from any status to any other status
+    const allStatuses = [
+      'pending',
+      'processing',
+      'shipped',
+      'delivered',
+      'cancelled'
+    ];
+    
+    // Filter out the current status to prevent changing to the same status
+    return allStatuses.filter(status => status !== currentStatus);
   };
   
   const validOptions = getValidStatusOptions(order.orderStatus);

@@ -109,8 +109,9 @@ export default function OrdersTable({
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <button 
-                  className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${ORDER_STATUS_COLORS[order.orderStatus] || 'bg-gray-100 text-gray-800'}`}
+                  className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer
+                    ${ORDER_STATUS_COLORS[order.orderStatus] || 'bg-gray-100 text-gray-800'}
+                    hover:brightness-90 hover:shadow-sm transition-all`}
                   onClick={() => onChangeStatus(order)}
                 >
                   {ORDER_STATUS_LABELS[order.orderStatus] || order.orderStatus}
@@ -118,10 +119,11 @@ export default function OrdersTable({
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <button
-                  className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full 
+                  className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer
                     ${order.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 
                       order.paymentStatus === 'refunded' ? 'bg-red-100 text-red-800' : 
-                      'bg-yellow-100 text-yellow-800'}`}
+                      'bg-yellow-100 text-yellow-800'}
+                    hover:brightness-90 hover:shadow-sm transition-all`}
                   onClick={() => onChangePayment(order)}
                 >
                   {order.paymentStatus === 'awaiting_payment' ? 'Awaiting Payment' :

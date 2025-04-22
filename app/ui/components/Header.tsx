@@ -264,7 +264,7 @@ export default function Header() {
                     About Us
                   </Link>
                   <div className="border-t border-gray-100 mt-2 pt-2 px-4 py-2 text-sm text-gray-700">
-                    Contact Us:{" "}
+                    Need Help?{" "}
                     <a
                       href="mailto:contact@scentra.app"
                       className="text-blue-600 hover:underline"

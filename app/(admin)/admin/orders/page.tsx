@@ -248,7 +248,7 @@ export default function OrdersAdminPage() {
   return (
     <div className="min-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-black mb-8">Admin Dashboard - Orders</h1>
+        <h1 className="text-3xl font-bold text-black mb-8">Orders Management</h1>
         
         <OrderFilterBar
           statusFilter={statusFilter}

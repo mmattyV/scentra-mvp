@@ -19,16 +19,16 @@ export default function PaymentStatusModal({
   
   // Define valid payment status transitions based on current status
   const getValidPaymentOptions = (currentStatus: string): string[] => {
-    switch (currentStatus) {
-      case 'awaiting_payment':
-        return ['paid', 'refunded'];
-      case 'paid':
-        return ['refunded'];
-      case 'refunded':
-        return ['paid']; // Can mark as paid again if refunded by mistake
-      default:
-        return ['awaiting_payment', 'paid', 'refunded'];
-    }
+    // Return all possible payment statuses regardless of current status
+    // This allows changing from any payment status to any other payment status
+    const allStatuses = [
+      'awaiting_payment',
+      'paid',
+      'refunded'
+    ];
+    
+    // Filter out the current status to prevent changing to the same status
+    return allStatuses.filter(status => status !== currentStatus);
   };
   
   const validOptions = getValidPaymentOptions(order.paymentStatus);

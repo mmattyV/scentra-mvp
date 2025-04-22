@@ -184,9 +184,14 @@ export default function AdminTable({
                   ${listing.askingPrice.toFixed(2)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${STATUS_COLORS[listing.status] || 'bg-gray-100 text-gray-800'}`}>
+                  <button 
+                    onClick={() => onStatusChange(listing)}
+                    className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer
+                      ${STATUS_COLORS[listing.status] || 'bg-gray-100 text-gray-800'}
+                      hover:brightness-90 hover:shadow-sm transition-all`}
+                  >
                     {STATUS_LABELS[listing.status] || listing.status}
-                  </span>
+                  </button>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatDate(listing.createdAt)}
@@ -198,14 +203,6 @@ export default function AdminTable({
                   >
                     Details
                   </button>
-                  {listing.status !== 'removed' && (
-                    <button
-                      onClick={() => onStatusChange(listing)}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      Change Status
-                    </button>
-                  )}
                 </td>
               </tr>
             );
