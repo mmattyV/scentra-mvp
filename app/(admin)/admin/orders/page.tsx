@@ -19,6 +19,10 @@ export default function OrdersAdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // For pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
   // For order detail viewing
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -279,15 +283,57 @@ export default function OrdersAdminPage() {
             <p className="text-lg text-gray-600">No orders found.</p>
           </div>
         ) : (
-          <OrdersTable
-            orders={orders}
-            orderItems={orderItems}
-            buyerInfo={buyerInfo}
-            formatDate={formatDate}
-            onViewDetails={handleViewDetails}
-            onChangeStatus={handleChangeStatus}
-            onChangePayment={handleChangePayment}
-          />
+          <>
+            <OrdersTable
+              orders={orders.slice(
+                (currentPage - 1) * itemsPerPage,
+                currentPage * itemsPerPage
+              )}
+              orderItems={orderItems}
+              buyerInfo={buyerInfo}
+              formatDate={formatDate}
+              onViewDetails={handleViewDetails}
+              onChangeStatus={handleChangeStatus}
+              onChangePayment={handleChangePayment}
+            />
+            
+            {/* Pagination */}
+            {orders.length > itemsPerPage && (
+              <div className="flex justify-between items-center mt-6 px-6 py-3 border-t border-gray-200">
+                <div className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> to{' '}
+                  <span className="font-medium">
+                    {Math.min(currentPage * itemsPerPage, orders.length)}
+                  </span>{' '}
+                  of <span className="font-medium">{orders.length}</span> results
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-1 rounded-md ${
+                      currentPage === 1 
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(orders.length / itemsPerPage), prev + 1))}
+                    disabled={currentPage === Math.ceil(orders.length / itemsPerPage)}
+                    className={`px-3 py-1 rounded-md ${
+                      currentPage === Math.ceil(orders.length / itemsPerPage) 
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
         
         {/* Order Details Modal */}
