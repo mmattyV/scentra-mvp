@@ -1,7 +1,6 @@
 'use client';
 
 import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/app/types';
-import type { Order, OrderItem, UserData } from '@/app/types';
 
 interface OrdersTableProps {
   orders: any[];

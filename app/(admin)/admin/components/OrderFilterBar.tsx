@@ -1,7 +1,5 @@
 'use client';
 
-import { ORDER_STATUS_LABELS } from '@/app/types';
-
 interface OrderFilterBarProps {
   statusFilter: string;
   paymentFilter: string;

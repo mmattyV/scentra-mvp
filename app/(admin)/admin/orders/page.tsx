@@ -4,12 +4,6 @@ import { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
 import { fetchUsersByIds } from '@/app/utils/admin-api-client';
-import { 
-  ORDER_STATUS_COLORS, 
-  ORDER_STATUS_LABELS,
-  STATUS_COLORS,
-  STATUS_LABELS
-} from '@/app/types';
 import { updateListingWithStatusSync } from '@/app/utils/listingStatusSync';
 import OrderFilterBar from '../components/OrderFilterBar';
 import OrdersTable from '../components/OrdersTable';
