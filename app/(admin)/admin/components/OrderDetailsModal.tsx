@@ -292,6 +292,7 @@ export default function OrderDetailsModal({
                             {item.bottleSize} • {item.condition}
                             {item.condition === 'used' && item.percentRemaining !== undefined && 
                               ` • ${item.percentRemaining}% remaining`}
+                            {` • ${item.hasOriginalBox ? 'With original box' : 'No original box'}`}
                           </p>
                           
                           <div className="mt-2">

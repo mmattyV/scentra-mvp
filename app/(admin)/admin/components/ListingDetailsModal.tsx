@@ -173,6 +173,10 @@ export default function ListingDetailsModal({
                     </div>
                   )}
                   <div>
+                    <span className="text-gray-500">Original Box:</span>{' '}
+                    <span>{listing.hasOriginalBox ? 'Yes' : 'No'}</span>
+                  </div>
+                  <div>
                     <span className="text-gray-500">Price:</span>{' '}
                     <span className="font-medium">${listing.askingPrice.toFixed(2)}</span>
                   </div>

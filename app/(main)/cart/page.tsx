@@ -161,6 +161,7 @@ export default function CartPage() {
                             {item.condition === 'used' && item.percentRemaining === 100 && (
                               <p>Open box</p>
                             )}
+                            <p>{item.hasOriginalBox ? 'Includes original box' : 'No original box'}</p>
                           </div>
                         </div>
                         

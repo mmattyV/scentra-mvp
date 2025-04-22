@@ -24,6 +24,7 @@ export default function NewListingPage() {
   const [bottleSize, setBottleSize] = useState('');
   const [condition, setCondition] = useState('new');
   const [percentRemaining, setPercentRemaining] = useState(100);
+  const [hasOriginalBox, setHasOriginalBox] = useState(false);
   const [askingPrice, setAskingPrice] = useState('');
   
   // Payment method state
@@ -320,6 +321,7 @@ export default function NewListingPage() {
         bottleSize,
         condition,
         percentRemaining: condition === 'used' ? percentRemaining : undefined,
+        hasOriginalBox,
         askingPrice: parseFloat(askingPrice),
         imageKey: imageKey,
         status: 'active',
@@ -440,6 +442,19 @@ export default function NewListingPage() {
                 </div>
               </div>
             )}
+            
+            {/* Original Box */}
+            <div className="space-y-2">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hasOriginalBox}
+                  onChange={(e) => setHasOriginalBox(e.target.checked)}
+                  className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                />
+                <span className="text-sm font-medium text-gray-700">Includes Original Box</span>
+              </label>
+            </div>
             
             {/* Image Upload */}
             <div className="space-y-2">

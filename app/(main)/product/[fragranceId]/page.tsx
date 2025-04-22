@@ -303,6 +303,7 @@ export default function ProductDetailsPage() {
                                 {listing.condition === 'used' && listing.percentRemaining === 100 && (
                                   <p>Open box</p>
                                 )}
+                                <p>{listing.hasOriginalBox ? 'Includes original box' : 'No original box'}</p>
                               </div>
                             </div>
                             {selectedListingId === listing.id && (

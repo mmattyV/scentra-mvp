@@ -462,7 +462,7 @@ export default function SalesPage() {
                             {fragrance.brand} - {fragrance.name}
                           </p>
                           <p className="text-sm text-gray-500 truncate">
-                            {item.bottleSize} • {item.condition === 'new' ? 'New' : `Used (${item.percentRemaining}% remaining)`}
+                            {item.bottleSize} • {item.condition === 'new' ? 'New' : `Used (${item.percentRemaining}% remaining)`} • {item.hasOriginalBox ? 'With original box' : 'No original box'}
                           </p>
                           <div className="mt-1">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[item.status as SaleStatus] || 'bg-gray-100 text-gray-800'}`}>

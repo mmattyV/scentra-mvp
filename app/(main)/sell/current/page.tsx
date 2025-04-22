@@ -326,7 +326,7 @@ export default function CurrentListingsPage() {
                             {fragrance.brand} - {fragrance.name}
                           </p>
                           <p className="text-sm text-gray-500 truncate">
-                            {listing.bottleSize} • {listing.condition === 'new' ? 'New' : `Used (${listing.percentRemaining}% remaining)`}
+                            {listing.bottleSize} • {listing.condition === 'new' ? 'New' : `Used (${listing.percentRemaining}% remaining)`} • {listing.hasOriginalBox ? 'With original box' : 'No original box'}
                           </p>
                           <div className="mt-1">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">

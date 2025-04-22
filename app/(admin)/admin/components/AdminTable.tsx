@@ -178,6 +178,7 @@ export default function AdminTable({
                   {listing.condition === 'used' && listing.percentRemaining && (
                     <div className="text-sm text-gray-500">{listing.percentRemaining}% remaining</div>
                   )}
+                  <div className="text-sm text-gray-500">{listing.hasOriginalBox ? 'With original box' : 'No original box'}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   ${listing.askingPrice.toFixed(2)}

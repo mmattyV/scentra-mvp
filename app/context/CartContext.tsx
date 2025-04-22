@@ -111,6 +111,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         bottleSize: listing.bottleSize,
         condition: listing.condition,
         percentRemaining: listing.percentRemaining,
+        hasOriginalBox: listing.hasOriginalBox,
         originalPrice: listing.askingPrice,
         currentPrice: listing.askingPrice,
         imageUrl: imageUrl,

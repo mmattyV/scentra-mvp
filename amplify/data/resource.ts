@@ -42,6 +42,7 @@ const schema = a.schema({
       bottleSize: a.string().required(),
       condition: a.string().required(), // "new" or "used" 
       percentRemaining: a.integer(), // Only applies if condition is "used"
+      hasOriginalBox: a.boolean().default(false), // Whether the item comes with its original box
       askingPrice: a.float().required(),
       status: a.string().default("active"), // "active", "sold", "removed"
       imageKey: a.string().required(), // S3 key for the image in Amplify Storage
@@ -94,6 +95,7 @@ const schema = a.schema({
       bottleSize: a.string().required(),
       condition: a.string().required(),
       percentRemaining: a.integer(),
+      hasOriginalBox: a.boolean().default(false),
       price: a.float().required(),
       imageUrl: a.string().required(),
       status: a.string().required(),

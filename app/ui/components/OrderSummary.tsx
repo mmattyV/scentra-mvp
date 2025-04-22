@@ -52,6 +52,7 @@ export default function OrderSummary({ items, subtotal }: OrderSummaryProps) {
                 <p className="text-xs text-gray-500">
                   {item.bottleSize} • {item.condition}
                   {item.condition === 'used' && item.percentRemaining !== undefined && ` • ${item.percentRemaining}% remaining`}
+                  {` • ${item.hasOriginalBox ? 'With original box' : 'No original box'}`}
                 </p>
               </div>
             </div>

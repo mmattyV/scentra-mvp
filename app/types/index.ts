@@ -7,6 +7,7 @@ export interface Listing {
   bottleSize: string;
   condition: string;
   percentRemaining?: number;
+  hasOriginalBox: boolean;
   askingPrice: number;
   imageKey: string;
   status: string;
@@ -58,6 +59,7 @@ export interface CartItem {
   bottleSize: string;
   condition: string;
   percentRemaining?: number;
+  hasOriginalBox: boolean;
   originalPrice: number;
   currentPrice: number;
   imageUrl: string;
@@ -89,6 +91,7 @@ export interface OrderItem {
   bottleSize: string;
   condition: string;
   percentRemaining?: number;
+  hasOriginalBox: boolean;
   price: number;
   imageUrl: string;
   status: SaleStatus;
