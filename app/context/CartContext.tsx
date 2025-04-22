@@ -319,8 +319,8 @@ export const CartProvider = ({ children }: CartProviderProps) => {
       
       // Create payment instructions based on payment method
       const paymentInstructions = paymentMethod === 'venmo' 
-        ? 'Please send payment to @Scentra with your Order ID in the memo.'
-        : 'Please send payment to payment@scentra.com with your Order ID in the memo.';
+        ? 'Please send payment to @scentra with your Order ID in the description.'
+        : 'Please send payment to @Scentra1 with your Order ID in the description.';
       
       // Create the serialized version of the shipping address for storage
       const serializedShippingAddress = JSON.stringify(shippingAddress);
