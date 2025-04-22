@@ -309,10 +309,10 @@ export default function SalesPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 sm:py-8">
         <div className="max-w-5xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold">Your Sales</h1>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold">Your Sales</h1>
             <button
               onClick={() => setShowPaymentPreferences(!showPaymentPreferences)}
               className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
@@ -323,39 +323,39 @@ export default function SalesPage() {
           
           {/* Payment Preferences Form */}
           {showPaymentPreferences && (
-            <div className="bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200">
-              <h2 className="text-xl font-semibold mb-4">Payment Preferences</h2>
+            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg mb-6 sm:mb-8 border border-gray-200">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4">Payment Preferences</h2>
               
               {isLoadingPaymentPreferences ? (
                 <div className="flex justify-center py-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-900 border-t-transparent"></div>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-5">
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
                       Preferred Payment Method
                     </label>
-                    <div className="flex space-x-4">
+                    <div className="flex flex-wrap gap-4">
                       <label className="flex items-center space-x-2 cursor-pointer">
                         <input
                           type="radio"
                           checked={preferredMethod === 'paypal'}
                           onChange={() => setPreferredMethod('paypal')}
-                          className="h-4 w-4 text-black focus:ring-black border-gray-300"
+                          className="h-5 w-5 text-black focus:ring-black border-gray-300"
                           disabled={isSavingPaymentPreferences}
                         />
-                        <span>PayPal</span>
+                        <span className="text-base">PayPal</span>
                       </label>
                       <label className="flex items-center space-x-2 cursor-pointer">
                         <input
                           type="radio"
                           checked={preferredMethod === 'venmo'}
                           onChange={() => setPreferredMethod('venmo')}
-                          className="h-4 w-4 text-black focus:ring-black border-gray-300"
+                          className="h-5 w-5 text-black focus:ring-black border-gray-300"
                           disabled={isSavingPaymentPreferences}
                         />
-                        <span>Venmo</span>
+                        <span className="text-base">Venmo</span>
                       </label>
                     </div>
                   </div>
@@ -370,7 +370,7 @@ export default function SalesPage() {
                       value={paymentHandle}
                       onChange={(e) => setPaymentHandle(e.target.value)}
                       placeholder={preferredMethod === 'paypal' ? 'Enter your PayPal email or username' : 'Enter your Venmo username (without @)'}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-1 focus:ring-black focus:outline-none border-gray-300"
+                      className="w-full px-4 py-3 sm:py-2 border rounded-lg focus:ring-1 focus:ring-black focus:outline-none border-gray-300 text-base sm:text-sm"
                       disabled={isSavingPaymentPreferences}
                     />
                   </div>
@@ -379,11 +379,11 @@ export default function SalesPage() {
                     <div className="text-red-500 text-sm mt-2">{paymentPreferenceError}</div>
                   )}
                   
-                  <div className="flex justify-end space-x-4 pt-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4 pt-4">
                     <button
                       type="button"
                       onClick={() => setShowPaymentPreferences(false)}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                      className="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
                       disabled={isSavingPaymentPreferences}
                     >
                       Cancel
@@ -392,7 +392,7 @@ export default function SalesPage() {
                       type="button"
                       onClick={handleSavePaymentPreferences}
                       disabled={isSavingPaymentPreferences || !paymentHandle.trim()}
-                      className={`inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none ${
+                      className={`w-full sm:w-auto inline-flex justify-center items-center px-4 py-2.5 sm:py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none ${
                         isSavingPaymentPreferences || !paymentHandle.trim() ? 'opacity-70 cursor-not-allowed' : ''
                       }`}
                     >
@@ -422,7 +422,7 @@ export default function SalesPage() {
               <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-black"></div>
             </div>
           ) : sales.length === 0 ? (
-            <div className="bg-gray-50 rounded-lg p-8 text-center">
+            <div className="bg-gray-50 rounded-lg p-6 sm:p-8 text-center">
               <h3 className="text-lg font-medium text-gray-900 mb-2">No sales yet</h3>
               <p className="text-gray-500 mb-6">When you sell items, they will appear here.</p>
               <button
@@ -439,8 +439,8 @@ export default function SalesPage() {
                   const fragrance = getFragranceDetails(item.fragranceId);
                   return (
                     <li key={item.id} className="p-4 hover:bg-gray-50">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex-shrink-0 relative h-16 w-16 rounded-md overflow-hidden">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div className="flex-shrink-0 relative h-20 w-20 sm:h-16 sm:w-16 rounded-md overflow-hidden">
                           {imageUrls[item.id] ? (
                             <Image
                               src={imageUrls[item.id]}
@@ -458,11 +458,14 @@ export default function SalesPage() {
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
+                          <p className="text-base sm:text-sm font-medium text-gray-900 truncate">
                             {fragrance.brand} - {fragrance.name}
                           </p>
                           <p className="text-sm text-gray-500 truncate">
-                            {item.bottleSize} • {item.condition === 'new' ? 'New' : `Used (${item.percentRemaining}% remaining)`} • {item.hasOriginalBox ? 'With original box' : 'No original box'}
+                            {item.bottleSize} • {item.condition === 'new' ? 'New' : `Used (${item.percentRemaining}% remaining)`}
+                          </p>
+                          <p className="text-sm text-gray-500 truncate">
+                            {item.hasOriginalBox ? 'With original box' : 'No original box'}
                           </p>
                           <div className="mt-1">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[item.status as SaleStatus] || 'bg-gray-100 text-gray-800'}`}>
@@ -471,14 +474,14 @@ export default function SalesPage() {
                           </div>
                         </div>
                         
-                        <div className="flex-shrink-0 text-right">
-                          <p className="text-sm font-semibold text-gray-900">${parseFloat(item.askingPrice.toString()).toFixed(2)}</p>
+                        <div className="flex flex-row sm:flex-col justify-between items-center sm:items-end sm:text-right mt-2 sm:mt-0">
+                          <p className="text-base sm:text-sm font-semibold text-gray-900">${parseFloat(item.askingPrice.toString()).toFixed(2)}</p>
                           
                           {/* Action buttons based on status */}
                           {item.status === 'unconfirmed' && !showConfirmation && (
                             <button
                               onClick={() => handleConfirmClick(item)}
-                              className="mt-1 text-xs inline-flex items-center px-3 py-1 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 focus:outline-none"
+                              className="mt-1 text-xs inline-flex items-center px-3 py-1.5 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 focus:outline-none"
                             >
                               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
@@ -489,20 +492,20 @@ export default function SalesPage() {
                           
                           {/* Confirmation dialog */}
                           {showConfirmation === item.id && (
-                            <div className="mt-2 text-xs">
+                            <div className="mt-2 text-xs w-full sm:w-auto">
                               <p className="mb-1 text-gray-700">Confirm this sale?</p>
                               <div className="flex space-x-2">
                                 <button
                                   onClick={handleConfirm}
                                   disabled={isConfirming}
-                                  className="px-2 py-1 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                                  className="px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
                                 >
                                   {isConfirming ? '...' : 'Yes'}
                                 </button>
                                 <button
                                   onClick={() => setShowConfirmation(null)}
                                   disabled={isConfirming}
-                                  className="px-2 py-1 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:opacity-50"
+                                  className="px-3 py-1.5 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:opacity-50"
                                 >
                                   No
                                 </button>
@@ -523,7 +526,7 @@ export default function SalesPage() {
       {/* Shipping Instructions Modal */}
       {showShippingInstructions && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-lg w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold">Shipping Instructions</h3>
               <div className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -563,7 +566,7 @@ export default function SalesPage() {
             <div className="mt-6 flex justify-end">
               <button
                 onClick={closeShippingInstructions}
-                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 focus:outline-none"
+                className="px-4 py-2.5 sm:py-2 bg-black text-white rounded-md hover:bg-gray-800 focus:outline-none"
               >
                 Got It
               </button>

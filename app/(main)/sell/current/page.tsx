@@ -262,10 +262,10 @@ export default function CurrentListingsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 sm:py-8">
         <div className="max-w-5xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold">Current Listings</h1>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold">Current Listings</h1>
             <button
               onClick={() => router.push('/sell/new')}
               className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none"
@@ -292,7 +292,7 @@ export default function CurrentListingsPage() {
               <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-black"></div>
             </div>
           ) : listings.length === 0 ? (
-            <div className="bg-gray-50 rounded-lg p-8 text-center">
+            <div className="bg-gray-50 rounded-lg p-6 sm:p-8 text-center">
               <h3 className="text-lg font-medium text-gray-900 mb-2">No active listings</h3>
               <p className="text-gray-500 mb-6">You don't have any active listings yet.</p>
               <button
@@ -311,8 +311,8 @@ export default function CurrentListingsPage() {
                   const fragrance = getFragranceDetails(listing.fragranceId);
                   return (
                     <li key={listing.id} className="p-4 hover:bg-gray-50">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex-shrink-0 relative h-16 w-16 rounded-md overflow-hidden">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div className="flex-shrink-0 relative h-20 w-20 sm:h-16 sm:w-16 rounded-md overflow-hidden">
                           <Image
                             src={imageUrls[listing.id] || '/placeholder-fragrance.jpg'}
                             alt={fragrance.name}
@@ -322,11 +322,14 @@ export default function CurrentListingsPage() {
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
+                          <p className="text-base sm:text-sm font-medium text-gray-900 truncate">
                             {fragrance.brand} - {fragrance.name}
                           </p>
                           <p className="text-sm text-gray-500 truncate">
-                            {listing.bottleSize} • {listing.condition === 'new' ? 'New' : `Used (${listing.percentRemaining}% remaining)`} • {listing.hasOriginalBox ? 'With original box' : 'No original box'}
+                            {listing.bottleSize} • {listing.condition === 'new' ? 'New' : `Used (${listing.percentRemaining}% remaining)`}
+                          </p>
+                          <p className="text-sm text-gray-500 truncate">
+                            {listing.hasOriginalBox ? 'With original box' : 'No original box'}
                           </p>
                           <div className="mt-1">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -335,7 +338,7 @@ export default function CurrentListingsPage() {
                           </div>
                         </div>
                         
-                        <div className="flex-shrink-0 text-right">
+                        <div className="flex flex-row sm:flex-col justify-between items-center sm:items-end sm:text-right mt-2 sm:mt-0">
                           {editingId === listing.id ? (
                             <div className="flex items-center space-x-1">
                               <div className="relative">
@@ -355,39 +358,39 @@ export default function CurrentListingsPage() {
                               <button
                                 onClick={() => updatePrice(listing.id)}
                                 disabled={isPriceUpdating}
-                                className="p-1 text-green-600 hover:text-green-800"
+                                className="p-2 text-green-600 hover:text-green-800"
                                 title="Save"
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
                               </button>
                               <button
                                 onClick={cancelEditing}
-                                className="p-1 text-red-600 hover:text-red-800"
+                                className="p-2 text-red-600 hover:text-red-800"
                                 title="Cancel"
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
                               </button>
                             </div>
                           ) : (
-                            <p className="text-sm font-semibold text-gray-900">${parseFloat(listing.askingPrice.toString()).toFixed(2)}</p>
+                            <p className="text-base sm:text-sm font-semibold text-gray-900">${parseFloat(listing.askingPrice.toString()).toFixed(2)}</p>
                           )}
                           
                           {/* Action buttons */}
                           {!editingId && !deletingId && (
-                            <div className="mt-1 flex space-x-2">
+                            <div className="flex space-x-3 sm:mt-1">
                               <button
                                 onClick={() => startEditing(listing)}
-                                className="text-xs text-indigo-600 hover:text-indigo-800"
+                                className="text-xs px-2 py-1 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded"
                               >
                                 Edit Price
                               </button>
                               <button
                                 onClick={() => confirmTakeDown(listing.id)}
-                                className="text-xs text-red-600 hover:text-red-800"
+                                className="text-xs px-2 py-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
                               >
                                 Remove
                               </button>
@@ -396,18 +399,18 @@ export default function CurrentListingsPage() {
                           
                           {/* Deletion confirmation */}
                           {deletingId === listing.id && (
-                            <div className="mt-1 text-xs">
+                            <div className="mt-2 text-xs w-full sm:w-auto">
                               <p className="mb-1 text-gray-700">Remove listing?</p>
                               <div className="flex space-x-2">
                                 <button
                                   onClick={() => takeDownListing(listing)}
-                                  className="px-2 py-1 bg-red-600 text-white rounded-md hover:bg-red-700"
+                                  className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700"
                                 >
                                   Yes
                                 </button>
                                 <button
                                   onClick={cancelTakeDown}
-                                  className="px-2 py-1 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                                  className="px-3 py-1.5 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
                                 >
                                   No
                                 </button>

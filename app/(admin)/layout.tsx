@@ -23,7 +23,7 @@ function AdminHeader() {
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between gap-8">
+        <div className="flex items-center justify-between gap-2 sm:gap-8">
           <div className="flex items-center">
             <Link href="/" className="flex-shrink-0 h-[40px] flex items-center">
               <Image
@@ -32,15 +32,23 @@ function AdminHeader() {
                 width={120}
                 height={59}
                 priority
-                className="h-full w-auto"
+                className="hidden sm:block h-full w-auto"
+              />
+              <Image
+                src="/scentra-cropped.svg"
+                alt="Scentra Logo"
+                width={35}
+                height={35}
+                priority
+                className="block sm:hidden h-[35px] w-auto"
               />
             </Link>
-            <span className="ml-4 text-gray-500 text-sm">Admin Dashboard</span>
+            <span className="ml-2 sm:ml-4 text-gray-500 text-sm">Admin Dashboard</span>
           </div>
           
-          <div className="flex items-center space-x-8">
+          <div className="flex items-center">
             {authStatus === "authenticated" && (
-              <div className="text-sm font-medium text-gray-700">
+              <div className="hidden sm:block text-sm font-medium text-gray-700 mr-8">
                 Hello {user?.signInDetails?.loginId?.split('@')[0] || 'Admin'}!
               </div>
             )}
@@ -48,7 +56,7 @@ function AdminHeader() {
             {authStatus === "authenticated" ? (
               <button
                 onClick={signOut}
-                className="text-sm font-medium text-white bg-black flex items-center justify-center px-4 py-2 rounded-md transition duration-200 hover:bg-gray-800 min-w-[110px] whitespace-nowrap h-[40px]"
+                className="text-sm font-medium text-white bg-black flex items-center justify-center px-3 sm:px-4 py-2 rounded-md transition duration-200 hover:bg-gray-800 min-w-[90px] sm:min-w-[110px] whitespace-nowrap h-[40px]"
               >
                 <svg
                   className="w-5 h-5 mr-1 flex-shrink-0"
@@ -64,12 +72,12 @@ function AdminHeader() {
                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                   />
                 </svg>
-                Sign Out
+                <span className="sm:inline">Sign Out</span>
               </button>
             ) : (
               <Link
                 href="/admin"
-                className="text-sm font-medium text-white bg-black flex items-center justify-center px-4 py-2 rounded-md transition duration-200 hover:bg-gray-800 min-w-[110px] whitespace-nowrap h-[40px]"
+                className="text-sm font-medium text-white bg-black flex items-center justify-center px-3 sm:px-4 py-2 rounded-md transition duration-200 hover:bg-gray-800 min-w-[90px] sm:min-w-[110px] whitespace-nowrap h-[40px]"
               >
                 <svg
                   className="w-5 h-5 mr-1 flex-shrink-0"
@@ -85,7 +93,7 @@ function AdminHeader() {
                     d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
                   />
                 </svg>
-                Log In
+                <span className="sm:inline">Log In</span>
               </Link>
             )}
           </div>

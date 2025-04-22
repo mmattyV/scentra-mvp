@@ -8,9 +8,10 @@ interface ProtectedLinkProps {
   href: string;
   children: ReactNode;
   className?: string;
+  onClick?: () => void;
 }
 
-export default function ProtectedLink({ href, children, className }: ProtectedLinkProps) {
+export default function ProtectedLink({ href, children, className, onClick }: ProtectedLinkProps) {
   const router = useRouter();
   const { authStatus } = useAuthenticator(context => [context.authStatus]);
   const isLoading = authStatus === "configuring";
@@ -23,6 +24,8 @@ export default function ProtectedLink({ href, children, className }: ProtectedLi
     if (authStatus !== "authenticated") {
       e.preventDefault();
       router.push("/auth");
+    } else if (onClick) {
+      onClick();
     }
   };
 

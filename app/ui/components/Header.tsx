@@ -12,6 +12,8 @@ import CartIcon from "./cart/CartIcon";
 export default function Header() {
   const [isSellMenuOpen, setIsSellMenuOpen] = useState(false);
   const [isBuyerMenuOpen, setIsBuyerMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileSellerMenuOpen, setIsMobileSellerMenuOpen] = useState(false);
   const [userName, setUserName] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const { authStatus, signOut, user } = useAuthenticator(context => [context.authStatus, context.user]);
@@ -19,6 +21,7 @@ export default function Header() {
 
   const sellMenuRef = useRef<HTMLDivElement>(null);
   const buyerMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   // Close menus when clicking outside
   useEffect(() => {
@@ -34,6 +37,13 @@ export default function Header() {
         !buyerMenuRef.current.contains(event.target as Node)
       ) {
         setIsBuyerMenuOpen(false);
+      }
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node) &&
+        !(event.target as HTMLElement).closest(".mobile-menu-toggle")
+      ) {
+        setIsMobileMenuOpen(false);
       }
     }
 
@@ -72,10 +82,73 @@ export default function Header() {
     }
   };
 
+  // Handler to close mobile menu after navigation
+  const handleMobileNavigation = () => {
+    setIsMobileMenuOpen(false);
+    setIsMobileSellerMenuOpen(false);
+  };
+
+  // Render sell menu items
+  const renderSellMenuItems = (isMobile: boolean = false) => {
+    const linkClass = isMobile 
+      ? "block px-4 py-3 text-base text-gray-700 hover:bg-gray-100"
+      : "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100";
+    
+    return authStatus === "authenticated" ? (
+      <>
+        <Link
+          href="/sell/new"
+          className={linkClass}
+          onClick={isMobile ? handleMobileNavigation : undefined}
+        >
+          New Listing
+        </Link>
+        <Link
+          href="/sell/current"
+          className={linkClass}
+          onClick={isMobile ? handleMobileNavigation : undefined}
+        >
+          Current Listings
+        </Link>
+        <Link
+          href="/sell/sales"
+          className={linkClass}
+          onClick={isMobile ? handleMobileNavigation : undefined}
+        >
+          Sales
+        </Link>
+      </>
+    ) : (
+      <>
+        <ProtectedLink
+          href="/sell/new"
+          className={linkClass}
+          onClick={isMobile ? handleMobileNavigation : undefined}
+        >
+          New Listing
+        </ProtectedLink>
+        <ProtectedLink
+          href="/sell/current"
+          className={linkClass}
+          onClick={isMobile ? handleMobileNavigation : undefined}
+        >
+          Current Listings
+        </ProtectedLink>
+        <ProtectedLink
+          href="/sell/sales"
+          className={linkClass}
+          onClick={isMobile ? handleMobileNavigation : undefined}
+        >
+          Sales
+        </ProtectedLink>
+      </>
+    );
+  };
+
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <nav className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between gap-8">
+        <div className="flex items-center justify-between gap-3 md:gap-8">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0 h-[40px] flex items-center">
             <Image
@@ -128,8 +201,8 @@ export default function Header() {
             </form>
           </div>
 
-          {/* Right Section */}
-          <div className="flex items-center space-x-8">
+          {/* Right Section - Desktop */}
+          <div className="hidden md:flex items-center space-x-8">
             {/* Sell Button with Dropdown */}
             <div className="relative" ref={sellMenuRef}>
               <button
@@ -153,49 +226,7 @@ export default function Header() {
               </button>
               {isSellMenuOpen && (
                 <div className="absolute -right-2 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                  {authStatus === "authenticated" ? (
-                    <>
-                      <Link
-                        href="/sell/new"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        New Listing
-                      </Link>
-                      <Link
-                        href="/sell/current"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Current Listings
-                      </Link>
-                      <Link
-                        href="/sell/sales"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Sales
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      <ProtectedLink
-                        href="/sell/new"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        New Listing
-                      </ProtectedLink>
-                      <ProtectedLink
-                        href="/sell/current"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Current Listings
-                      </ProtectedLink>
-                      <ProtectedLink
-                        href="/sell/sales"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Sales
-                      </ProtectedLink>
-                    </>
-                  )}
+                  {renderSellMenuItems()}
                 </div>
               )}
             </div>
@@ -276,8 +307,9 @@ export default function Header() {
               )}
             </div>
        
-            {/* Cart Icon */}
+            {/* Cart Icon - Desktop */}
             <CartIcon />
+            
             {/* Hello User Message */}
             {authStatus === "authenticated" && (
               <div className="text-sm font-medium text-gray-700">
@@ -333,7 +365,188 @@ export default function Header() {
               </Link>
             )}
           </div>
+
+          {/* Mobile Right Section */}
+          <div className="flex items-center space-x-4 md:hidden">
+            {/* Cart Icon - Mobile */}
+            <CartIcon />
+            
+            {/* Mobile Menu Toggle */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="mobile-menu-toggle p-1 hover:bg-gray-100 rounded-full"
+              aria-label="Toggle mobile menu"
+            >
+              <div className="w-6 h-6 flex flex-col justify-center items-center">
+                <div className="w-5 h-0.5 bg-gray-800 mb-1"></div>
+                <div className="w-5 h-0.5 bg-gray-800 mb-1"></div>
+                <div className="w-5 h-0.5 bg-gray-800"></div>
+              </div>
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div 
+            ref={mobileMenuRef}
+            className="md:hidden fixed inset-0 top-[65px] bg-white z-50 overflow-y-auto h-[calc(100vh-65px)]"
+          >
+            <div className="p-4 border-b border-gray-200">
+              {authStatus === "authenticated" ? (
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-base font-medium text-gray-800">
+                    Hello {userName}!
+                  </div>
+                  <button
+                    onClick={() => {
+                      signOut();
+                      router.push('/auth');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="text-sm font-medium text-white bg-black flex items-center justify-center px-3 py-2 rounded-md transition duration-200 hover:bg-gray-800"
+                  >
+                    <svg
+                      className="w-4 h-4 mr-1 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                      />
+                    </svg>
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/auth"
+                  className="w-full text-base font-medium text-white bg-black flex items-center justify-center px-4 py-3 rounded-md transition duration-200 hover:bg-gray-800 mb-2"
+                  onClick={handleMobileNavigation}
+                >
+                  <svg
+                    className="w-5 h-5 mr-2 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                    />
+                  </svg>
+                  Log In
+                </Link>
+              )}
+            </div>
+
+            {/* Seller Section - Mobile */}
+            <div className="border-b border-gray-200">
+              <button
+                onClick={() => setIsMobileSellerMenuOpen(!isMobileSellerMenuOpen)}
+                className="flex items-center justify-between w-full px-4 py-3 text-left text-base font-medium text-gray-800 hover:bg-gray-100"
+              >
+                <span>Seller Options</span>
+                <svg
+                  className={`w-5 h-5 text-gray-500 transition-transform ${isMobileSellerMenuOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              {isMobileSellerMenuOpen && (
+                <div className="bg-gray-50">
+                  {renderSellMenuItems(true)}
+                </div>
+              )}
+            </div>
+
+            {/* Main Navigation - Mobile */}
+            <div>
+              <Link
+                href="/"
+                className="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 border-b border-gray-200"
+                onClick={handleMobileNavigation}
+              >
+                Home
+              </Link>
+              
+              {authStatus === "authenticated" ? (
+                <>
+                  <Link
+                    href="/orders"
+                    className="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 border-b border-gray-200"
+                    onClick={handleMobileNavigation}
+                  >
+                    Past Orders
+                  </Link>
+                  <Link
+                    href="/cart"
+                    className="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 border-b border-gray-200"
+                    onClick={handleMobileNavigation}
+                  >
+                    My Cart
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <ProtectedLink
+                    href="/orders"
+                    className="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 border-b border-gray-200"
+                    onClick={handleMobileNavigation}
+                  >
+                    Past Orders
+                  </ProtectedLink>
+                  <ProtectedLink
+                    href="/cart"
+                    className="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 border-b border-gray-200"
+                    onClick={handleMobileNavigation}
+                  >
+                    My Cart
+                  </ProtectedLink>
+                </>
+              )}
+              
+              <Link
+                href="/faq"
+                className="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 border-b border-gray-200"
+                onClick={handleMobileNavigation}
+              >
+                FAQ
+              </Link>
+              <Link
+                href="/about"
+                className="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 border-b border-gray-200"
+                onClick={handleMobileNavigation}
+              >
+                About Us
+              </Link>
+              
+              <div className="px-4 py-4 text-base text-gray-700">
+                Need Help?{" "}
+                <a
+                  href="mailto:contact@scentra.app"
+                  className="text-blue-600 hover:underline"
+                >
+                  contact@scentra.app
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
     </header>
   );
