@@ -130,6 +130,71 @@ export default function OrderConfirmationPage({ params }: OrderConfirmationPageP
           </div>
         </div>
         
+        <div className="border-b py-6 mb-6">
+          <h2 className="text-lg font-medium mb-4">Order Process</h2>
+          <div className="space-y-4">
+            <div className="flex items-start">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                <span className="font-medium">1</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900">Send Payment</h3>
+                <p className="text-gray-600 text-sm">
+                  Send your total payment via <strong>Venmo or PayPal</strong> to Scentra (details provided above).
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                <span className="font-medium">2</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900">Payment Confirmation</h3>
+                <p className="text-gray-600 text-sm">
+                  Once Scentra confirms your payment, we'll notify the seller to confirm the sale.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                <span className="font-medium">3</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900">Seller Ships to Scentra</h3>
+                <p className="text-gray-600 text-sm">
+                  After the seller confirms, they ship the fragrance to our verification center.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                <span className="font-medium">4</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900">Authentication & Quality Check</h3>
+                <p className="text-gray-600 text-sm">
+                  Our experts verify the fragrance for authenticity, condition, and volume.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                <span className="font-medium">5</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900">Fragrance is Shipped to You</h3>
+                <p className="text-gray-600 text-sm">
+                  If everything checks out, we release the payment to the seller and ship the verified fragrance to you.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 pt-3 border-t border-gray-100 text-sm text-gray-700">
+            <p className="font-medium">Payment Methods:</p>
+            <p>Venmo: <span className="font-medium">@scentra</span> | PayPal: <span className="font-medium">@Scentra1</span></p>
+          </div>
+        </div>
+        
         <div className="mb-6">
           <h2 className="text-lg font-medium mb-4">Shipping Address</h2>
           <div className="text-sm text-gray-700">

@@ -8,6 +8,7 @@ import { useAuthenticator } from "@aws-amplify/ui-react";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import { useRouter } from "next/navigation";
 import CartIcon from "./cart/CartIcon";
+import BetaInfoPopup from "./info/BetaInfoPopup";
 
 export default function Header() {
   const [isSellMenuOpen, setIsSellMenuOpen] = useState(false);
@@ -167,6 +168,7 @@ export default function Header() {
               priority
               className="block md:hidden h-[35px] w-auto" // Show on mobile, hide on medium and up
             />
+            <BetaInfoPopup />
           </Link>
 
           {/* Search Bar */}

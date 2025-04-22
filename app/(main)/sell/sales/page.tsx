@@ -573,18 +573,20 @@ export default function SalesPage() {
               
               <ol className="list-decimal pl-5 space-y-3 my-4">
                 <li>Package your fragrance securely with bubble wrap or similar padding.</li>
+                <li>Include the original box if possible.</li>
                 <li>Place it in a sturdy box to prevent damage during shipping.</li>
                 <li>Print a shipping label addressed to our verification center.</li>
                 <li>Ship via USPS, UPS, or FedEx with tracking.</li>
-                <li>Email your tracking number to <span className="font-medium">shipping@scentra.com</span> with your order ID.</li>
+                <li>Email your tracking number to <span className="font-medium">contact@scentra.app</span> with your order ID.</li>
               </ol>
               
               <div className="bg-gray-50 p-4 rounded-md mb-4 border border-gray-200">
                 <p className="font-semibold mb-1">Shipping Address:</p>
                 <p className="font-medium">
-                  Scentra Verification Center<br />
-                  123 Fragrance Blvd<br />
-                  New York, NY 10001
+                  Scentra<br />
+                  1770 Mass Ave.<br />
+                  #198<br />
+                  Cambridge, MA 02140
                 </p>
               </div>
               

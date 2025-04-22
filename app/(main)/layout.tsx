@@ -1,5 +1,6 @@
 import Header from '@/app/ui/components/Header';
 import Footer from '@/app/ui/components/Footer';
+import VerificationProcessDrawer from '../ui/components/info/VerificationProcessDrawer';
 
 export default function MainLayout({
   children,
@@ -11,6 +12,7 @@ export default function MainLayout({
       <Header />
       <main className="flex-grow">{children}</main>
       <Footer />
+      <VerificationProcessDrawer />
     </>
   );
 }

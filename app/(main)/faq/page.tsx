@@ -30,7 +30,7 @@ const FAQPage = () => {
         },
         {
           question: "What if I don't receive my order?",
-          answer: "If your tracking hasn't updated or your order is lost in transit, reach out to us. We'll investigate and either resend or refund your purchase."
+          answer: "If your order islost in transit, reach out to us. We'll investigate and either resend or refund your purchase."
         },
         {
           question: "What happens if the buyer claims the item is fake but it's not?",
@@ -43,7 +43,7 @@ const FAQPage = () => {
       items: [
         {
           question: "How do I list a fragrance for sale?",
-          answer: "Listing is simple: create a Scentra account, upload photos of your fragrance, enter key details (brand, size, usage level), set a price, and submit for review. Once approved, it's live for buyers to view and purchase."
+          answer: "Listing is simple: create a Scentra account, upload photos of your fragrance, enter key details (brand, size, usage level), set a price, and submit. Once submitted, it's live for buyers to view and purchase."
         },
         {
           question: "What types of fragrances can I sell on Scentra?",
@@ -64,7 +64,7 @@ const FAQPage = () => {
       items: [
         {
           question: "Who pays for shipping?",
-          answer: "Buyers cover the cost of shipping at checkout. Scentra provides a prepaid shipping label for sellers to send the item to our authentication center."
+          answer: "Sellers must cover the cost of shipping to Scentra's authentication center. Shipping to the buyer is covered by Scentra."
         },
         {
           question: "How long does it take to receive my order?",
@@ -81,7 +81,7 @@ const FAQPage = () => {
       items: [
         {
           question: "How does payment work for buyers and sellers?",
-          answer: "Buyers pay upfront through our secure checkout system. Funds are held by Scentra until the item passes authentication, then released to the seller."
+          answer: "Buyers pay through either Venmo or PayPal. Funds are held by Scentra until the item passes authentication, then released to the seller."
         },
         {
           question: "When do I get paid as a seller?",

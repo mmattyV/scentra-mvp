@@ -67,7 +67,21 @@ export default function OrderSummary({ items, subtotal }: OrderSummaryProps) {
         </div>
         
         <div className="flex justify-between">
-          <span className="text-sm text-gray-600">Verification Fee (3%)</span>
+          <span className="text-sm text-blue-600 relative group cursor-help flex items-center gap-1 hover:underline">
+            Verification Fee (3%)
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+              className="w-4 h-4 text-blue-500 group-hover:text-blue-700 transition-colors"
+            >
+              <path fillRule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-8-3a1 1 0 100-2 1 1 0 000 2zm2 7a1 1 0 01-2 0v-4a1 1 0 112 0v4z" clipRule="evenodd" />
+            </svg>
+            <span className="invisible opacity-0 group-hover:visible group-hover:opacity-100 absolute left-0 -top-24 w-64 bg-gray-800 text-white text-xs rounded p-2 shadow-lg z-10 transition-opacity duration-200">
+              This fee covers authentication, condition check, and volume verification—so you get exactly what you paid for, guaranteed.
+            </span>
+          </span>
           <span className="text-sm font-medium">{formatPrice(verificationFee)}</span>
         </div>
         

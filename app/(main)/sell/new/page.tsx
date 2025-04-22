@@ -22,6 +22,10 @@ export default function NewListingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAuthReady, setIsAuthReady] = useState(false);
   
+  // Modal state
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [isHowItWorksModalOpen, setIsHowItWorksModalOpen] = useState(false);
+  
   // Form state
   const [fragranceId, setFragranceId] = useState('');
   const [bottleSize, setBottleSize] = useState('');
@@ -402,6 +406,30 @@ export default function NewListingPage() {
         <div className="max-w-2xl mx-auto">
           <h1 className="text-3xl font-bold mb-8 text-center">Create New Listing</h1>
           
+          {/* Seller Information Links */}
+          <div className="mb-6 flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-6 text-sm">
+            <button 
+              type="button"
+              onClick={() => setIsTermsModalOpen(true)}
+              className="text-blue-600 hover:text-blue-800 flex items-center"
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Terms of Selling
+            </button>
+            <button 
+              type="button"
+              onClick={() => setIsHowItWorksModalOpen(true)}
+              className="text-blue-600 hover:text-blue-800 flex items-center"
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              How Selling Works
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Fragrance Selection */}
             <div className="space-y-2">
@@ -576,7 +604,7 @@ export default function NewListingPage() {
                       />
                     </svg>
                     <p className="mt-1 text-sm text-gray-500">
-                      Upload a high-quality photo of your product
+                      Upload a high-quality photo of the front of your bottle. Include the original box in the image if possible.
                     </p>
                     <input
                       ref={fileInputRef}
@@ -711,10 +739,31 @@ export default function NewListingPage() {
               {validationErrors.askingPrice && (
                 <p className="text-red-500 text-sm mt-1">{validationErrors.askingPrice}</p>
               )}
+              <p className="text-sm text-gray-600 mt-1">
+                Note: You must cover the cost of shipping to our Verification Center. Please price your product accordingly.
+              </p>
+              <div className="bg-gray-50 p-4 rounded-md mb-4 border border-gray-200">
+                <p className="font-semibold mb-1">Shipping Address:</p>
+                <p className="font-medium">
+                  Scentra<br />
+                  1770 Mass Ave.<br />
+                  #198<br />
+                  Cambridge, MA 02140
+                </p>
+              </div>
             </div>
             
             {/* Submit Button */}
             <div className="pt-4">
+              <p className="text-sm text-gray-600 mb-4 text-center">
+                By creating this listing, you agree to the <button 
+                  type="button" 
+                  className="text-blue-600 hover:underline"
+                  onClick={() => setIsTermsModalOpen(true)}
+                >
+                  Terms of Service
+                </button>
+              </p>
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -728,6 +777,152 @@ export default function NewListingPage() {
           </form>
         </div>
       </main>
+
+      {/* Terms of Selling Modal */}
+      {isTermsModalOpen && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Terms of Selling on Scentra</h2>
+              <button 
+                onClick={() => setIsTermsModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            <div className="prose prose-sm max-w-none">
+              <p className="mb-4">By listing a fragrance on Scentra, you agree to the following terms:</p>
+              
+              <div className="mb-6">
+                <h3 className="font-semibold mb-2">Authenticity Required</h3>
+                <p>You may only list 100% authentic products. Counterfeit or misrepresented items are strictly prohibited and will result in account suspension.</p>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="font-semibold mb-2">Accurate Descriptions</h3>
+                <p>You must provide honest, detailed, and accurate information about your fragrance, including condition, size, and image.</p>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="font-semibold mb-2">Timely Shipping</h3>
+                <p>Once a sale is confirmed, you must ship your fragrance to our verification center <strong>as soon as possible</strong>.</p>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="font-semibold mb-2">Verification Required for Payment</h3>
+                <p>Scentra will release payment only after your fragrance has been authenticated and confirmed to match your listing.</p>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="font-semibold mb-2">Scentra's Right to Refuse</h3>
+                <p>Scentra reserves the right to reject or return any item that fails verification, appears damaged, or differs from the listing in material ways.</p>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="font-semibold mb-2">Final Sales</h3>
+                <p>Once a buyer's payment is processed and the item passes authentication, all sales are final.</p>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setIsTermsModalOpen(false)}
+                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                I Understand
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* How Selling Works Modal */}
+      {isHowItWorksModalOpen && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Selling: How Does It Work?</h2>
+              <button 
+                onClick={() => setIsHowItWorksModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            <div className="prose prose-sm max-w-none">
+              <ol className="list-none space-y-6">
+                <li className="flex">
+                  <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-black text-white rounded-full font-bold mr-3">1</div>
+                  <div>
+                    <h3 className="font-semibold mb-1">Create a Listing</h3>
+                    <p>Add all required details—brand, size, condition, image, and payment details.</p>
+                  </div>
+                </li>
+                
+                <li className="flex">
+                  <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-black text-white rounded-full font-bold mr-3">2</div>
+                  <div>
+                    <h3 className="font-semibold mb-1">Publish Your Listing</h3>
+                    <p>Once published, your fragrance becomes visible to buyers on Scentra.</p>
+                  </div>
+                </li>
+                
+                <li className="flex">
+                  <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-black text-white rounded-full font-bold mr-3">3</div>
+                  <div>
+                    <h3 className="font-semibold mb-1">Order Placed</h3>
+                    <p>When a buyer purchases your fragrance, the listing is placed <strong>on hold</strong> while payment is processed.</p>
+                  </div>
+                </li>
+                
+                <li className="flex">
+                  <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-black text-white rounded-full font-bold mr-3">4</div>
+                  <div>
+                    <h3 className="font-semibold mb-1">Confirm the Sale</h3>
+                    <p>Once the payment is processed, you'll be prompted to confirm the order from your <strong>Sales page</strong>.</p>
+                  </div>
+                </li>
+                
+                <li className="flex">
+                  <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-black text-white rounded-full font-bold mr-3">5</div>
+                  <div>
+                    <h3 className="font-semibold mb-1">Ship to Scentra</h3>
+                    <p>
+                      After confirmation, securely ship your fragrance to our Verification Center.
+                      <br />
+                      📩 Email your tracking number and order ID to <strong>contact@scentra.app</strong>.
+                    </p>
+                  </div>
+                </li>
+                
+                <li className="flex">
+                  <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-black text-white rounded-full font-bold mr-3">6</div>
+                  <div>
+                    <h3 className="font-semibold mb-1">Verification & Payout</h3>
+                    <p>
+                      Our team authenticates your item and checks that it matches your listing.
+                      <br />
+                      Once verified, you'll receive payment to your preferred method—typically within 1–2 business days.
+                    </p>
+                  </div>
+                </li>
+              </ol>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setIsHowItWorksModalOpen(false)}
+                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                Got It
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

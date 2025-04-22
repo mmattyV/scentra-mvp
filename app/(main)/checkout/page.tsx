@@ -7,6 +7,8 @@ import { useCart } from '@/app/context/CartContext';
 import Link from 'next/link';
 import ShippingForm from '@/app/ui/components/ShippingForm';
 import OrderSummary from '@/app/ui/components/OrderSummary';
+import BuyerInstructionsModal from '@/app/ui/components/BuyerInstructionsModal';
+import TermsOfServiceModal from '@/app/ui/components/TermsOfServiceModal';
 import type { ShippingAddress } from '@/app/types';
 
 export default function CheckoutPage() {
@@ -18,6 +20,12 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasValidationError, setHasValidationError] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [pendingOrderData, setPendingOrderData] = useState<{
+    shippingAddress: ShippingAddress;
+    paymentMethod: 'venmo' | 'paypal';
+  } | null>(null);
   
   // Client-side initialization
   useEffect(() => {
@@ -67,11 +75,24 @@ export default function CheckoutPage() {
   
   // Handle form submission
   const handleSubmit = async (shippingAddress: ShippingAddress, paymentMethod: 'venmo' | 'paypal') => {
+    // Store the order data and show terms modal
+    setPendingOrderData({ shippingAddress, paymentMethod });
+    setIsTermsModalOpen(true);
+  };
+  
+  // Handle terms acceptance and complete order
+  const handleTermsAccept = async () => {
+    if (!pendingOrderData) return;
+    
     setIsSubmitting(true);
+    setIsTermsModalOpen(false);
     
     try {
       // Call the createOrder method from CartContext
-      const orderId = await createOrder(shippingAddress, paymentMethod);
+      const orderId = await createOrder(
+        pendingOrderData.shippingAddress, 
+        pendingOrderData.paymentMethod
+      );
       
       // Redirect to confirmation page with order ID
       router.push(`/checkout/confirmation/${orderId}`);
@@ -105,8 +126,31 @@ export default function CheckoutPage() {
         {/* Main content - shipping form */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-6">Shipping Information</h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-medium text-gray-900">Shipping Information</h2>
+              <button
+                onClick={() => setIsInstructionsModalOpen(true)}
+                className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                How It Works
+              </button>
+            </div>
             <ShippingForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+            
+            <div className="mt-4 text-sm text-gray-600">
+              <p>
+                By proceeding to checkout, you'll be asked to agree to our{' '}
+                <button 
+                  onClick={() => setIsTermsModalOpen(true)}
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  Terms of Service
+                </button>
+              </p>
+            </div>
           </div>
           
           <div className="mt-4">
@@ -125,8 +169,34 @@ export default function CheckoutPage() {
         {/* Order summary */}
         <div className="lg:col-span-1">
           <OrderSummary items={items} subtotal={subtotal} />
+          
+          {/* How It Works button for mobile */}
+          <div className="mt-4 block lg:hidden">
+            <button
+              onClick={() => setIsInstructionsModalOpen(true)}
+              className="w-full py-2 text-center text-sm text-blue-600 hover:text-blue-800 flex items-center justify-center"
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              How It Works
+            </button>
+          </div>
         </div>
       </div>
+      
+      {/* Buyer Instructions Modal */}
+      <BuyerInstructionsModal 
+        isOpen={isInstructionsModalOpen} 
+        onClose={() => setIsInstructionsModalOpen(false)} 
+      />
+      
+      {/* Terms of Service Modal */}
+      <TermsOfServiceModal 
+        isOpen={isTermsModalOpen} 
+        onClose={() => setIsTermsModalOpen(false)}
+        onAccept={handleTermsAccept}
+      />
     </div>
   );
 }
