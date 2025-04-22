@@ -138,7 +138,7 @@ export default function OrderDetails({ order, items, onCancelOrder }: OrderDetai
                       src={item.imageUrl}
                       alt={item.fragranceName}
                       fill
-                      className="object-cover rounded-md"
+                      className="object-contain rounded-md"
                     />
                   </div>
                   <div className="ml-4 flex-1">

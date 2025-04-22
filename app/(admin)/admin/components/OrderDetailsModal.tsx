@@ -31,13 +31,92 @@ export default function OrderDetailsModal({
   const [activeTab, setActiveTab] = useState<'details' | 'items' | 'shipping'>('details');
   const [sellerPaymentPreferences, setSellerPaymentPreferences] = useState<Record<string, SellerPaymentPreference>>({});
   const [isLoadingPreferences, setIsLoadingPreferences] = useState(false);
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [isLoadingImages, setIsLoadingImages] = useState(false);
+  const [listings, setListings] = useState<Record<string, any>>({});
   
-  // Fetch seller payment preferences when items tab is viewed
+  // Fetch seller payment preferences and listing details when items tab is viewed
   useEffect(() => {
     if (activeTab === 'items' && orderItems.length > 0) {
       fetchSellerPaymentPreferences();
+      fetchListingsAndImages();
     }
   }, [activeTab, orderItems]);
+
+  // First fetch the listings that are associated with each order item
+  // Then use those listings to get the S3 image keys
+  const fetchListingsAndImages = async () => {
+    if (orderItems.length === 0) return;
+    
+    try {
+      setIsLoadingImages(true);
+      const client = generateClient<Schema>({
+        authMode: 'userPool'
+      });
+      
+      // Get all the listing IDs from the order items
+      const listingIds = orderItems.map(item => item.listingId);
+      
+      // Fetch all the listings in parallel
+      const listingResults = await Promise.all(
+        listingIds.map(async (listingId) => {
+          try {
+            const { data } = await client.models.Listing.get({
+              id: listingId
+            });
+            
+            return data;
+          } catch (error) {
+            console.error(`Error fetching listing ${listingId}:`, error);
+            return null;
+          }
+        })
+      );
+      
+      // Create a map of listing ID to listing data
+      const listingsMap: Record<string, any> = {};
+      listingResults.forEach(listing => {
+        if (listing) {
+          listingsMap[listing.id] = listing;
+        }
+      });
+      
+      setListings(listingsMap);
+      
+      // Now fetch the S3 image URLs for each listing that has an imageKey
+      const { getUrl } = await import('aws-amplify/storage');
+      const urls: Record<string, string> = {};
+      
+      // Use the listings to get the image URLs
+      await Promise.all(
+        orderItems.map(async (item) => {
+          const listing = listingsMap[item.listingId];
+          
+          if (listing && listing.imageKey && typeof listing.imageKey === 'string' && listing.imageKey.trim() !== '') {
+            try {
+              // Always use the seller-uploaded image from S3
+              const result = await getUrl({
+                path: listing.imageKey
+              });
+              urls[item.id] = result.url.toString();
+            } catch (error) {
+              console.error(`Error fetching image for item ${item.id}:`, error);
+              // Use a default/placeholder image on error
+              urls[item.id] = '/placeholder-fragrance.jpg';
+            }
+          } else {
+            urls[item.id] = '/placeholder-fragrance.jpg';
+          }
+        })
+      );
+      
+      setImageUrls(urls);
+    } catch (error) {
+      console.error('Error fetching listings and images:', error);
+    } finally {
+      setIsLoadingImages(false);
+    }
+  };
   
   const fetchSellerPaymentPreferences = async () => {
     if (orderItems.length === 0) return;
@@ -275,12 +354,16 @@ export default function OrderDetailsModal({
                 orderItems.map((item) => (
                   <div key={item.id} className="border rounded-lg p-4 flex flex-col sm:flex-row">
                     <div className="w-20 h-20 relative flex-shrink-0 mb-4 sm:mb-0">
-                      <Image
-                        src={item.imageUrl || '/placeholder-fragrance.jpg'}
-                        alt={item.fragranceName}
-                        fill
-                        className="object-cover rounded-md"
-                      />
+                      {isLoadingImages ? (
+                        <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-md"></div>
+                      ) : (
+                        <Image
+                          src={imageUrls[item.id] || '/placeholder-fragrance.jpg'}
+                          alt={item.fragranceName}
+                          fill
+                          className="object-contain rounded-md"
+                        />
+                      )}
                     </div>
                     
                     <div className="sm:ml-4 flex-1">

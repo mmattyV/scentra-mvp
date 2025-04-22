@@ -35,7 +35,7 @@ export default function OrderSummary({ items, subtotal }: OrderSummaryProps) {
                 src={item.imageUrl}
                 alt={item.fragranceName}
                 fill
-                className="object-cover"
+                className="object-contain"
               />
             </div>
             <div className="ml-4 flex-1 flex flex-col">

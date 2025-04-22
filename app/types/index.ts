@@ -52,7 +52,7 @@ export interface FragranceDetails {
 export interface CartItem {
   id: string;
   listingId: string;
-  sellerId: string;
+  sellerId?: string;
   fragranceId: string;
   fragranceName: string;
   brand: string;
@@ -63,6 +63,7 @@ export interface CartItem {
   originalPrice: number;
   currentPrice: number;
   imageUrl: string;
+  sellerImageUrl?: string;
   addedAt: string;
   isAvailable: boolean;
   priceChanged: boolean;
@@ -94,6 +95,7 @@ export interface OrderItem {
   hasOriginalBox: boolean;
   price: number;
   imageUrl: string;
+  imageKey: string;
   status: SaleStatus;
 }
 

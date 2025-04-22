@@ -6,8 +6,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
 import type { CartItem, Listing, ShippingAddress, SaleStatus } from '@/app/types';
-import { FRAGRANCES } from '@/app/utils/fragrance-data';
+import { FRAGRANCES, Fragrance } from '@/app/utils/fragrance-data';
 import { updateListingWithStatusSync } from '@/app/utils/listingStatusSync';
+
+// Ensure FRAGRANCES is treated as an array of Fragrance objects
+const fragrancesArray: Fragrance[] = Array.isArray(FRAGRANCES) ? FRAGRANCES : [];
 
 // Define the Cart Context shape
 interface CartContextType {
@@ -93,10 +96,19 @@ export const CartProvider = ({ children }: CartProviderProps) => {
   const addItem = async (listing: Listing, imageUrl: string) => {
     try {
       // Find fragrance details
-      const fragranceData = FRAGRANCES.find(f => f.productId === listing.fragranceId);
+      const fragranceData = fragrancesArray.find(f => f.productId === listing.fragranceId);
       
       if (!fragranceData) {
         console.error('Fragrance data not found for listing:', listing.id);
+        return;
+      }
+      
+      // For buyers in cart: Use the image URL from the CSV data
+      const fragranceImageUrl = fragranceData.imageUrl || '/placeholder-fragrance.jpg';
+      
+      // Item already in cart?
+      if (items.some(item => item.listingId === listing.id)) {
+        console.log('Item already in cart');
         return;
       }
       
@@ -108,16 +120,17 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         fragranceId: listing.fragranceId,
         fragranceName: fragranceData.name,
         brand: fragranceData.brand,
+        imageUrl: fragranceImageUrl, // Use the CSV image for buyer view
+        sellerImageUrl: imageUrl, // Store the seller's uploaded image separately
         bottleSize: listing.bottleSize,
         condition: listing.condition,
         percentRemaining: listing.percentRemaining,
-        hasOriginalBox: listing.hasOriginalBox,
+        hasOriginalBox: listing.hasOriginalBox || false,
         originalPrice: listing.askingPrice,
         currentPrice: listing.askingPrice,
-        imageUrl: imageUrl,
         addedAt: new Date().toISOString(),
         isAvailable: true,
-        priceChanged: false
+        priceChanged: false,
       };
       
       // Update cart state with new item
@@ -305,13 +318,14 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         id: uuidv4(),
         orderId,
         listingId: item.listingId,
-        sellerId: item.sellerId,
+        sellerId: item.sellerId || 'unknown',
         fragranceId: item.fragranceId,
         fragranceName: item.fragranceName,
         brand: item.brand,
         bottleSize: item.bottleSize,
         condition: item.condition,
         percentRemaining: item.percentRemaining,
+        hasOriginalBox: item.hasOriginalBox,
         price: item.currentPrice,
         imageUrl: item.imageUrl,
         status: 'unconfirmed' as SaleStatus
@@ -382,6 +396,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
               bottleSize: item.bottleSize,
               condition: item.condition,
               percentRemaining: item.percentRemaining,
+              hasOriginalBox: item.hasOriginalBox,
               price: item.price,
               imageUrl: item.imageUrl,
               status: item.status

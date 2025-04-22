@@ -2,23 +2,6 @@ import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 import { getUserAttributes } from "./get-user-attributes/resource";
 
 const schema = a.schema({
-  Fragrance: a
-    .model({
-      productId: a.string().required(), // Unique identifier for the fragrance
-      name: a.string().required(),
-      brand: a.string().required(),
-      description: a.string(),
-      category: a.string(),
-    })
-    .authorization((allow) => [
-      // Public API key users can only read
-      allow.publicApiKey().to(['read']),
-      // Regular authenticated users can only read
-      allow.authenticated().to(['read']),
-      // Only ADMINS group can create/update/delete fragrances
-      allow.group("ADMINS")
-    ]),
-
   // New model for seller payment preferences
   SellerPaymentPreference: a
     .model({

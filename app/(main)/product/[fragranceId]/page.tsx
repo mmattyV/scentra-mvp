@@ -6,8 +6,11 @@ import { useParams, useRouter } from 'next/navigation';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
 import type { Listing, ListingWithImage } from '@/app/types';
-import { FRAGRANCES } from '@/app/utils/fragrance-data';
+import { FRAGRANCES, Fragrance } from '@/app/utils/fragrance-data';
 import { useCart } from '@/app/context/CartContext';
+
+// Helper function to ensure FRAGRANCES is treated as an array
+const fragrancesArray: Fragrance[] = Array.isArray(FRAGRANCES) ? FRAGRANCES : [];
 
 export default function ProductDetailsPage() {
   const router = useRouter();
@@ -28,7 +31,7 @@ export default function ProductDetailsPage() {
   const [isVerificationOpen, setVerificationOpen] = useState(false);
   
   // Get fragrance details from the static data
-  const fragranceDetails = FRAGRANCES.find(f => f.productId === fragranceId);
+  const fragranceDetails = fragrancesArray.find(f => f.productId === fragranceId);
   
   // Handle client-side rendering
   useEffect(() => {
@@ -231,12 +234,14 @@ export default function ProductDetailsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {/* Left Column - Image */}
           <div className="relative aspect-square">
-            {listings.length > 0 ? (
+            {/* Show the fragrance image from CSV data for the main product view */}
+            {fragranceDetails.imageUrl ? (
               <Image
-                src={listings[0].imageUrl}
+                src={fragranceDetails.imageUrl}
                 alt={fragranceDetails.name}
                 fill
-                className="object-cover rounded-lg"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-contain rounded-lg"
                 priority
               />
             ) : (
@@ -244,7 +249,8 @@ export default function ProductDetailsPage() {
                 src="/placeholder-fragrance.jpg"
                 alt={fragranceDetails.name}
                 fill
-                className="object-cover rounded-lg"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-contain rounded-lg"
                 priority
               />
             )}

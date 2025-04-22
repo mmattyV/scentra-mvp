@@ -7,8 +7,11 @@ import { generateClient } from "aws-amplify/data";
 import { uploadData, getUrl } from "aws-amplify/storage";
 import type { Schema } from "@/amplify/data/resource";
 import Image from 'next/image';
-import { FRAGRANCES } from '@/app/utils/fragrance-data';
+import { FRAGRANCES, Fragrance } from '@/app/utils/fragrance-data';
 import { fetchAuthSession } from 'aws-amplify/auth';
+
+// Ensure FRAGRANCES is treated as an array of Fragrance objects
+const fragrancesArray: Fragrance[] = Array.isArray(FRAGRANCES) ? FRAGRANCES : [];
 
 // Amplify is now configured at the root level in AuthenticatorProvider
 
@@ -26,6 +29,13 @@ export default function NewListingPage() {
   const [percentRemaining, setPercentRemaining] = useState(100);
   const [hasOriginalBox, setHasOriginalBox] = useState(false);
   const [askingPrice, setAskingPrice] = useState('');
+  
+  // Search and fragrance selection state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredFragrances, setFilteredFragrances] = useState<Fragrance[]>(fragrancesArray.slice(0, 50));
+  const [isFragranceDropdownOpen, setIsFragranceDropdownOpen] = useState(false);
+  const [selectedFragrance, setSelectedFragrance] = useState<Fragrance | null>(null);
+  const fragranceDropdownRef = useRef<HTMLDivElement>(null);
   
   // Payment method state
   const [preferredMethod, setPreferredMethod] = useState<'paypal' | 'venmo'>('paypal');
@@ -101,6 +111,53 @@ export default function NewListingPage() {
     
     fetchPaymentPreferences();
   }, [isClient, isAuthReady, user]);
+
+  // Add click outside handler for fragrance dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (fragranceDropdownRef.current && !fragranceDropdownRef.current.contains(event.target as Node)) {
+        setIsFragranceDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Filter fragrances based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredFragrances(fragrancesArray.slice(0, 50));
+      return;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    const filtered = fragrancesArray.filter(
+      fragrance => 
+        fragrance.name.toLowerCase().includes(query) || 
+        fragrance.brand.toLowerCase().includes(query)
+    ).slice(0, 100); // Limit to 100 results for performance
+
+    setFilteredFragrances(filtered);
+  }, [searchQuery]);
+
+  // Handle fragrance selection
+  const handleSelectFragrance = (fragrance: Fragrance) => {
+    setFragranceId(fragrance.productId);
+    setSelectedFragrance(fragrance);
+    setIsFragranceDropdownOpen(false);
+    
+    // Clear fragrance validation error if any
+    if (validationErrors.fragranceId) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.fragranceId;
+        return newErrors;
+      });
+    }
+  };
 
   // Render redirect if no user after auth check is completed
   if (isClient && isAuthReady && !user) {
@@ -351,21 +408,58 @@ export default function NewListingPage() {
               <label htmlFor="fragrance" className="block text-sm font-medium text-gray-700">
                 Fragrance
               </label>
-              <select
-                id="fragrance"
-                value={fragranceId}
-                onChange={(e) => setFragranceId(e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-1 focus:ring-black focus:outline-none ${
-                  validationErrors.fragranceId ? 'border-red-500' : 'border-gray-300'
-                }`}
-              >
-                <option value="">Select a fragrance</option>
-                {FRAGRANCES.map((fragrance) => (
-                  <option key={fragrance.productId} value={fragrance.productId}>
-                    {fragrance.brand} - {fragrance.name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <input
+                  id="fragrance"
+                  type="search"
+                  value={selectedFragrance ? `${selectedFragrance.brand} - ${selectedFragrance.name}` : searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSelectedFragrance(null);
+                    setFragranceId('');
+                    setIsFragranceDropdownOpen(true);
+                  }}
+                  onClick={() => setIsFragranceDropdownOpen(true)}
+                  placeholder="Search for a fragrance"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-1 focus:ring-black focus:outline-none ${
+                    validationErrors.fragranceId ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  aria-label="Search for a fragrance by name or brand"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsFragranceDropdownOpen(!isFragranceDropdownOpen)}
+                  className="absolute inset-y-0 right-0 flex items-center px-2 text-gray-500"
+                  aria-label={isFragranceDropdownOpen ? "Close fragrance list" : "Open fragrance list"}
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {isFragranceDropdownOpen && (
+                  <div
+                    ref={fragranceDropdownRef}
+                    className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-md max-h-60 overflow-y-auto"
+                  >
+                    {filteredFragrances.length > 0 ? (
+                      filteredFragrances.map((fragrance) => (
+                        <button
+                          key={fragrance.productId}
+                          type="button"
+                          onClick={() => handleSelectFragrance(fragrance)}
+                          className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                        >
+                          <span className="font-medium">{fragrance.brand}</span> - {fragrance.name}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                        No fragrances found. Try a different search term.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               {validationErrors.fragranceId && (
                 <p className="text-red-500 text-sm mt-1">{validationErrors.fragranceId}</p>
               )}

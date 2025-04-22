@@ -38,6 +38,7 @@ export default function ListingDetailsModal({
         setIsLoading(true);
         
         if (!listing.imageKey) {
+          // If no imageKey exists, use a placeholder image
           setImageUrl('/placeholder-fragrance.jpg');
           return;
         }
@@ -47,6 +48,7 @@ export default function ListingDetailsModal({
           path: listing.imageKey
         });
         
+        // Always use the seller's uploaded image from S3
         setImageUrl(result.url.toString());
       } catch (error) {
         console.error('Error fetching image URL:', error);
@@ -134,7 +136,7 @@ export default function ListingDetailsModal({
                   <img 
                     src={imageUrl} 
                     alt={fragranceDetails.name} 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-400">

@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
-import { FRAGRANCES } from '@/app/utils/fragrance-data';
+import { FRAGRANCES, Fragrance } from '@/app/utils/fragrance-data';
 import { fetchAuthSession } from 'aws-amplify/auth';
-import { useRouter } from 'next/navigation';
-import type { SaleItem, SaleStatus } from '@/app/types';
+import type { Listing, SaleStatus, SaleItem } from '@/app/types';
 import { STATUS_LABELS, STATUS_COLORS } from '@/app/types';
 import { updateListingWithStatusSync } from '@/app/utils/listingStatusSync';
+
+// Ensure FRAGRANCES is treated as an array of Fragrance objects
+const fragrancesArray: Fragrance[] = Array.isArray(FRAGRANCES) ? FRAGRANCES : [];
 
 export default function SalesPage() {
   const router = useRouter();
@@ -279,7 +282,7 @@ export default function SalesPage() {
   const getFragranceDetails = (fragranceId: string) => {
     if (!fragranceId) return { name: 'Unknown Fragrance', brand: 'Unknown Brand' };
     
-    return FRAGRANCES.find((f: { productId: string; name: string; brand: string }) => f.productId === fragranceId) || { 
+    return fragrancesArray.find((f: { productId: string; name: string; brand: string }) => f.productId === fragranceId) || { 
       name: 'Unknown Fragrance', 
       brand: 'Unknown Brand' 
     };

@@ -43,14 +43,13 @@ export default function AdminTable({
         const { getUrl } = await import('aws-amplify/storage');
         const urls: Record<string, string> = {};
         
-        // Process each listing to get its image URL
+        // Process each listing to get its image URL from the seller's uploaded images
         await Promise.all(
           listings
             .filter(listing => listing && listing.imageKey && typeof listing.imageKey === 'string' && listing.imageKey.trim() !== '')
             .map(async (listing) => {
               try {
-                // Use the regular path parameter without options
-                // The S3 permission will be handled by the backend
+                // Always use the seller-uploaded image from S3
                 const result = await getUrl({
                   path: listing.imageKey
                 });
@@ -148,7 +147,7 @@ export default function AdminTable({
                             alt={fragrance?.name || 'Fragrance'}
                             width={40}
                             height={40}
-                            className="object-cover"
+                            className="object-contain"
                             style={{ width: '100%', height: '100%' }} 
                             onError={(e) => {
                               // Cast the event target to HTMLImageElement to access src

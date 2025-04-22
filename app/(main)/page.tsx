@@ -7,8 +7,19 @@ import Link from "next/link";
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
 import type { Listing, FragranceGroup } from "@/app/types";
-import { FRAGRANCES } from '@/app/utils/fragrance-data';
+import { FRAGRANCES, Fragrance } from '@/app/utils/fragrance-data';
 import { useSearchParams, useRouter } from "next/navigation";
+
+// Ensure FRAGRANCES is treated as an array of Fragrance objects
+const fragrancesArray: Fragrance[] = Array.isArray(FRAGRANCES) ? FRAGRANCES : [];
+
+// Format price as USD
+const formatPrice = (price: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(price);
+};
 
 // SearchParamsWrapper component to isolate the useSearchParams hook
 function SearchParamsWrapper({ children }: { children: (searchTerm: string) => ReactNode }) {
@@ -107,22 +118,12 @@ function HomePageContent() {
               
               if (fragranceListings.length > 0) {
                 // Get fragrance details from our reference data
-                const fragranceData = FRAGRANCES.find(f => f.productId === fragranceId);
+                const fragranceData = fragrancesArray.find(f => f.productId === fragranceId);
                 
                 if (fragranceData) {
-                  // Use the first listing's image as the representative image
-                  let imageUrl = '/placeholder-fragrance.jpg'; // Default placeholder
-                  
-                  try {
-                    if (fragranceListings[0].imageKey) {
-                      const result = await getUrl({
-                        path: fragranceListings[0].imageKey,
-                      });
-                      imageUrl = result.url.toString();
-                    }
-                  } catch (error) {
-                    console.error(`Error fetching image for listing ${fragranceListings[0].id}:`, error);
-                  }
+                  // For buyers: Use the image URL from the CSV fragrance data
+                  // This will be displayed on the homepage as the main product image
+                  const imageUrl = fragranceData.imageUrl || '/placeholder-fragrance.jpg';
                   
                   // Find lowest price
                   const lowestPrice = Math.min(...fragranceListings.map(listing => listing.askingPrice));
@@ -205,32 +206,25 @@ function HomePageContent() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {filteredGroups.map((group) => (
-                    <Link
-                      href={`/product/${group.fragranceId}`}
+                    <Link 
+                      href={`/product/${group.fragranceId}`} 
                       key={group.fragranceId}
-                      className="block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                      className="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
                     >
                       <div className="relative aspect-square">
                         <Image
                           src={group.imageUrl}
-                          alt={group.name}
+                          alt={`${group.brand} - ${group.name}`}
                           fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="object-contain" 
                           priority={false}
                         />
                       </div>
                       <div className="p-4">
-                        <h3 className="text-lg font-medium text-gray-900">
-                          {group.name}
-                        </h3>
-                        <p className="text-sm text-gray-500">{group.brand}</p>
-                        <p className="mt-2 text-lg font-medium text-gray-900">
-                          From ${group.lowestPrice}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {group.listings.length} listing{group.listings.length !== 1 ? 's' : ''}
-                        </p>
+                        <h3 className="text-sm text-gray-500">{group.brand}</h3>
+                        <h2 className="font-medium text-gray-900 mb-1">{group.name}</h2>
+                        <p className="text-gray-800">From {formatPrice(group.lowestPrice)}</p>
                       </div>
                     </Link>
                   ))}

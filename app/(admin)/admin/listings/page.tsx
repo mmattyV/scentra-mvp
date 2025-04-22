@@ -5,7 +5,7 @@ import { useAuthenticator } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/data';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import { fetchUsersByIds } from '@/app/utils/admin-api-client';
-import { FRAGRANCES } from '@/app/utils/fragrance-data';
+import { FRAGRANCES, Fragrance } from '@/app/utils/fragrance-data';
 import type { Listing, UserData } from '@/app/types';
 import { updateListingWithStatusSync } from '@/app/utils/listingStatusSync';
 import type { Schema } from '@/amplify/data/resource';
@@ -14,6 +14,9 @@ import AdminTable from '../components/AdminTable';
 import ListingFilterBar from '../components/ListingFilterBar';
 import StatusChangeModal from '../components/StatusChangeModal';
 import ListingDetailsModal from '../components/ListingDetailsModal';
+
+// Ensure FRAGRANCES is treated as an array of Fragrance objects
+const fragrancesArray: Fragrance[] = Array.isArray(FRAGRANCES) ? FRAGRANCES : [];
 
 // Define the valid status options based on current status
 const getValidStatusTransitions = (currentStatus: string): string[] => {
@@ -174,8 +177,7 @@ export default function AdminDashboard() {
                 username: attributes.preferred_username || attributes.name || user.username || 'User',
                 email: attributes.email || 'email@example.com',
                 firstName: attributes.given_name || '',
-                lastName: attributes.family_name || '',
-                phone: attributes.phone_number || ''
+                lastName: attributes.family_name || ''
               };
               return; // Successfully found user data, exit early
             }
@@ -364,7 +366,7 @@ export default function AdminDashboard() {
               listings={listings}
               sellerInfo={sellerInfo}
               getFragranceDetails={(fragranceId: string) => {
-                return FRAGRANCES.find(f => f.productId === fragranceId) || {
+                return fragrancesArray.find(f => f.productId === fragranceId) || {
                   productId: fragranceId,
                   name: 'Unknown',
                   brand: 'Unknown'
@@ -399,10 +401,11 @@ export default function AdminDashboard() {
           <ListingDetailsModal
             listing={selectedListing}
             sellerInfo={sellerInfo[selectedListing.sellerId]}
-            fragranceDetails={FRAGRANCES.find(f => f.productId === (selectedListing as any).fragranceId) || {
+            fragranceDetails={fragrancesArray.find(f => f.productId === (selectedListing as any).fragranceId) || {
               productId: (selectedListing as any).fragranceId || 'Unknown',
               name: (selectedListing as any).fragranceName || 'Unknown',
-              brand: (selectedListing as any).brand || 'Unknown'
+              brand: (selectedListing as any).brand || 'Unknown',
+              imageUrl: '' // Empty imageUrl to ensure the seller's uploaded image is used
             }}
             buyerInfo={buyerInfo}
             orderId={orderInfo?.id}
