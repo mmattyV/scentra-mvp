@@ -38,6 +38,10 @@ function HomePageContent() {
   const [error, setError] = useState<string | null>(null);
   const [currentSearchTerm, setCurrentSearchTerm] = useState('');
   
+  // State for unconfirmed sales modal
+  const [unconfirmedSales, setUnconfirmedSales] = useState<Listing[]>([]);
+  const [showUnconfirmedModal, setShowUnconfirmedModal] = useState(false);
+  
   const router = useRouter();
   
   // Use SearchParamsWrapper to access search params safely
@@ -56,7 +60,44 @@ function HomePageContent() {
         useEffect(() => {
           setIsClient(true);
           fetchListings();
-        }, []);
+          
+          // If user is authenticated, check for unconfirmed sales
+          if (user?.userId) {
+            checkUnconfirmedSales();
+          }
+        }, [user]);
+        
+        // Function to check for unconfirmed sales for sellers
+        const checkUnconfirmedSales = async () => {
+          if (!user?.userId) return;
+          
+          try {
+            const client = generateClient<Schema>({
+              authMode: 'userPool'
+            });
+            
+            // Fetch listings where sellerId matches the current user and status is 'unconfirmed'
+            const { data } = await client.models.Listing.list({
+              filter: {
+                sellerId: { eq: user.userId },
+                status: { eq: 'unconfirmed' }
+              }
+            });
+            
+            if (data && data.length > 0) {
+              setUnconfirmedSales(data as unknown as Listing[]);
+              setShowUnconfirmedModal(true);
+            }
+          } catch (error) {
+            console.error('Error checking unconfirmed sales:', error);
+          }
+        };
+        
+        // Navigate to sales page
+        const goToSalesPage = () => {
+          router.push('/sell/sales');
+          setShowUnconfirmedModal(false);
+        };
         
         // Handle clearing search
         const clearSearch = () => {
@@ -176,6 +217,46 @@ function HomePageContent() {
         
         return (
           <div className="container mx-auto px-4 py-8">
+            {/* Unconfirmed Sales Modal */}
+            {showUnconfirmedModal && unconfirmedSales.length > 0 && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-lg">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-amber-100 p-2 rounded-full mr-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">Action Required</h3>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <p className="text-gray-700 mb-2">
+                      You have <span className="font-bold">{unconfirmedSales.length}</span> unconfirmed {unconfirmedSales.length === 1 ? 'sale' : 'sales'} that {unconfirmedSales.length === 1 ? 'requires' : 'require'} your attention.
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      Please confirm these sales to proceed with shipping and receive payment.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => setShowUnconfirmedModal(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      Later
+                    </button>
+                    <button
+                      onClick={goToSalesPage}
+                      className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+                    >
+                      View Sales
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {/* Hero Section */}
             <div className="mb-8">
               {currentSearchTerm ? (
