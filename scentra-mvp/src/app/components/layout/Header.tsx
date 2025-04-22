@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
+import BetaInfoPopup from '../ui/BetaInfoPopup';
 
 export default function Header() {
   const [isSellMenuOpen, setIsSellMenuOpen] = useState(false);
@@ -34,24 +35,27 @@ export default function Header() {
       <nav className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-8">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0 h-[40px] flex items-center">
-            <Image
-              src="/Scentra.svg"
-              alt="Scentra Logo"
-              width={120}
-              height={59}
-              priority
-              className="hidden md:block h-full w-auto" // Hide on mobile, show on medium and up
-            />
-            <Image
-              src="/Scentra-cropped.svg"
-              alt="Scentra Logo"
-              width={35}
-              height={35}
-              priority
-              className="block md:hidden h-[35px] w-auto" // Show on mobile, hide on medium and up
-            />
-          </Link>
+          <div className="flex items-center">
+            <Link href="/" className="flex-shrink-0 h-[40px] flex items-center">
+              <Image
+                src="/scentra.svg"
+                alt="Scentra Logo"
+                width={120}
+                height={59}
+                priority
+                className="hidden md:block h-full w-auto" // Hide on mobile, show on medium and up
+              />
+              <Image
+                src="/Scentra-cropped.svg"
+                alt="Scentra Logo"
+                width={35}
+                height={35}
+                priority
+                className="block md:hidden h-[35px] w-auto" // Show on mobile, hide on medium and up
+              />
+            </Link>
+            <BetaInfoPopup />
+          </div>
 
           {/* Search Bar */}
           <div className="flex-grow max-w-2xl">

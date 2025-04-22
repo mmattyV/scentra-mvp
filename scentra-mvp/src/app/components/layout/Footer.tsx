@@ -9,10 +9,10 @@ export default function Footer() {
         <div className="flex flex-col items-center space-y-4">
           {/* Logo */}
           <Image
-            src="/Scentra.svg"
+            src="/scentra.svg"
             alt="Scentra Logo"
-            width={100}
-            height={49}
+            width={150}
+            height={74}
             priority
           />
           

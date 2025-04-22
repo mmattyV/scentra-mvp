@@ -11,7 +11,7 @@ export default function LoginPage() {
       {/* Logo */}
       <div className="mb-12 flex justify-center items-center">
         <Image
-          src="/Scentra.svg"
+          src="/scentra.svg"
           alt="Scentra Logo"
           width={300}
           height={147}

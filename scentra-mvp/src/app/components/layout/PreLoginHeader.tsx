@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import BetaInfoPopup from '../ui/BetaInfoPopup';
 
 export default function PreLoginHeader() {
   return (
@@ -9,15 +10,20 @@ export default function PreLoginHeader() {
       <nav className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-8">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
-            <Image
-              src="/Scentra.svg"
-              alt="Scentra Logo"
-              width={120}
-              height={59}
-              priority
-            />
-          </Link>
+          <div className="flex items-center">
+            <Link href="/" className="flex-shrink-0">
+              <Image
+                src="/scentra.svg"
+                alt="Scentra Logo"
+                width={120}
+                height={59}
+                priority
+              />
+            </Link>
+            <div className="ml-6">
+              <BetaInfoPopup />
+            </div>
+          </div>
 
           {/* Search Bar */}
           <div className="flex-grow max-w-2xl">
