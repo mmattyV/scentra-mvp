@@ -25,6 +25,7 @@ export default function ListingDetailsModal({
 }: ListingDetailsModalProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [paymentPreference, setPaymentPreference] = useState<{
     preferredMethod: string;
     paymentHandle: string;
@@ -133,11 +134,19 @@ export default function ListingDetailsModal({
                     <div className="animate-spin rounded-full h-10 w-10 border-2 border-black border-t-transparent"></div>
                   </div>
                 ) : imageUrl ? (
-                  <img 
-                    src={imageUrl} 
-                    alt={fragranceDetails.name} 
-                    className="w-full h-full object-contain"
-                  />
+                  <>
+                    <div 
+                      className={`absolute inset-0 bg-gray-200 flex items-center justify-center transition-opacity duration-200 ${isImageLoaded ? 'opacity-0' : 'opacity-100'}`}
+                    >
+                      <div className="animate-pulse w-full h-full bg-gray-300"></div>
+                    </div>
+                    <img 
+                      src={imageUrl} 
+                      alt={fragranceDetails.name} 
+                      className="w-full h-full object-contain"
+                      onLoad={() => setIsImageLoaded(true)}
+                    />
+                  </>
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                     No image available

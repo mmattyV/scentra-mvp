@@ -33,6 +33,7 @@ export default function OrderDetailsModal({
   const [isLoadingPreferences, setIsLoadingPreferences] = useState(false);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [isLoadingImages, setIsLoadingImages] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const [listings, setListings] = useState<Record<string, any>>({});
   
   // Fetch seller payment preferences and listing details when items tab is viewed
@@ -357,12 +358,20 @@ export default function OrderDetailsModal({
                       {isLoadingImages ? (
                         <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-md"></div>
                       ) : (
-                        <Image
-                          src={imageUrls[item.id] || '/placeholder-fragrance.jpg'}
-                          alt={item.fragranceName}
-                          fill
-                          className="object-contain rounded-md"
-                        />
+                        <>
+                          <div 
+                            className={`absolute inset-0 bg-gray-200 flex items-center justify-center transition-opacity duration-200 ${loadedImages[item.id] ? 'opacity-0' : 'opacity-100'}`}
+                          >
+                            <div className="animate-pulse w-full h-full bg-gray-300 rounded-md"></div>
+                          </div>
+                          <Image
+                            src={imageUrls[item.id] || '/placeholder-fragrance.jpg'}
+                            alt={item.fragranceName}
+                            fill
+                            className="object-contain rounded-md"
+                            onLoad={() => setLoadedImages(prev => ({ ...prev, [item.id]: true }))}
+                          />
+                        </>
                       )}
                     </div>
                     

@@ -82,10 +82,11 @@ export default function CheckoutPage() {
   
   // Handle terms acceptance and complete order
   const handleTermsAccept = async () => {
+    setIsTermsModalOpen(false);
+    
     if (!pendingOrderData) return;
     
     setIsSubmitting(true);
-    setIsTermsModalOpen(false);
     
     try {
       // Call the createOrder method from CartContext

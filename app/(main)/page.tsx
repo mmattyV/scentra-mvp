@@ -286,29 +286,43 @@ function HomePageContent() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {filteredGroups.map((group) => (
-                    <Link 
-                      href={`/product/${group.fragranceId}`} 
-                      key={group.fragranceId}
-                      className="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
-                    >
-                      <div className="relative aspect-square">
-                        <Image
-                          src={group.imageUrl}
-                          alt={`${group.brand} - ${group.name}`}
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          className="object-contain" 
-                          priority={false}
-                        />
+                  {filteredGroups.length > 0 ? (
+                    filteredGroups.map((group) => (
+                      <Link 
+                        href={`/product/${group.fragranceId}`} 
+                        key={group.fragranceId}
+                        className="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
+                      >
+                        <div className="relative aspect-square">
+                          <Image
+                            src={group.imageUrl}
+                            alt={`${group.brand} - ${group.name}`}
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            className="object-contain" 
+                            priority={false}
+                          />
+                        </div>
+                        <div className="p-4">
+                          <h3 className="text-sm text-gray-500">{group.brand}</h3>
+                          <h2 className="font-medium text-gray-900 mb-1">{group.name}</h2>
+                          <p className="text-gray-800">From {formatPrice(group.lowestPrice)}</p>
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col items-center justify-center py-16 px-4 text-center">
+                      <div className="bg-gray-100 rounded-full p-4 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4M12 4v16" />
+                        </svg>
                       </div>
-                      <div className="p-4">
-                        <h3 className="text-sm text-gray-500">{group.brand}</h3>
-                        <h2 className="font-medium text-gray-900 mb-1">{group.name}</h2>
-                        <p className="text-gray-800">From {formatPrice(group.lowestPrice)}</p>
-                      </div>
-                    </Link>
-                  ))}
+                      <h2 className="text-xl font-semibold text-gray-900 mb-2">No fragrances available</h2>
+                      <p className="text-gray-600 max-w-md">
+                        There are currently no fragrances available for purchase. Please check back later for new listings.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

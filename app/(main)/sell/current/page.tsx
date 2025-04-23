@@ -22,6 +22,7 @@ export default function CurrentListingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   
   // For price editing
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -316,12 +317,28 @@ export default function CurrentListingsPage() {
                     <li key={listing.id} className="p-4 hover:bg-gray-50">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                         <div className="flex-shrink-0 relative h-20 w-20 sm:h-16 sm:w-16 rounded-md overflow-hidden">
-                          <Image
-                            src={imageUrls[listing.id] || '/placeholder-fragrance.jpg'}
-                            alt={fragrance.name}
-                            fill
-                            style={{ objectFit: 'cover' }}
-                          />
+                          {imageUrls[listing.id] ? (
+                            <>
+                              <div 
+                                className={`absolute inset-0 bg-gray-200 flex items-center justify-center transition-opacity duration-200 ${loadedImages[listing.id] ? 'opacity-0' : 'opacity-100'}`}
+                              >
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <div className="animate-pulse w-full h-full bg-gray-300"></div>
+                                </div>
+                              </div>
+                              <Image
+                                src={imageUrls[listing.id] || '/placeholder-fragrance.jpg'}
+                                alt={fragrance.name}
+                                fill
+                                style={{ objectFit: 'cover' }}
+                                onLoad={() => setLoadedImages(prev => ({ ...prev, [listing.id]: true }))}
+                              />
+                            </>
+                          ) : (
+                            <div className="h-full w-full bg-gray-200 flex items-center justify-center">
+                              <div className="animate-pulse w-full h-full bg-gray-300"></div>
+                            </div>
+                          )}
                         </div>
                         
                         <div className="flex-1 min-w-0">

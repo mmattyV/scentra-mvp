@@ -26,6 +26,7 @@ export default function AdminTable({
   // For image URLs
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [isLoadingImages, setIsLoadingImages] = useState(true);
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   
   // Calculate items for current page
   const paginatedListings = listings.slice(
@@ -142,6 +143,11 @@ export default function AdminTable({
                         <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
                       ) : (
                         <div className="relative h-10 w-10">
+                          <div 
+                            className={`absolute inset-0 bg-gray-200 flex items-center justify-center transition-opacity duration-200 ${loadedImages[listing.id] ? 'opacity-0' : 'opacity-100'}`}
+                          >
+                            <div className="animate-pulse w-full h-full bg-gray-300"></div>
+                          </div>
                           <Image 
                             src={imageUrls[listing.id] || '/placeholder-fragrance.jpg'} 
                             alt={fragrance?.name || 'Fragrance'}
@@ -149,6 +155,7 @@ export default function AdminTable({
                             height={40}
                             className="object-contain"
                             style={{ width: '100%', height: '100%' }} 
+                            onLoad={() => setLoadedImages(prev => ({ ...prev, [listing.id]: true }))}
                             onError={(e) => {
                               // Cast the event target to HTMLImageElement to access src
                               const target = e.target as HTMLImageElement;
