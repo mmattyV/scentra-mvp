@@ -129,7 +129,7 @@ export default function CartPage() {
                         src={item.imageUrl}
                         alt={item.fragranceName}
                         fill
-                        className="object-cover rounded-md"
+                        className="object-contain rounded-md"
                       />
                     </div>
                     

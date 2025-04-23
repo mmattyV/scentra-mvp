@@ -4,8 +4,8 @@ import { openSans } from "./ui/fonts";
 import AuthenticatorProvider from "./ui/components/AuthenticatorProvider";
 
 export const metadata: Metadata = {
-  title: "Scentra - Luxury Fragrance Marketplace",
-  description: "Buy, sell, and collect luxury fragrances",
+  title: "Scentra - Verified Fragrance Marketplace",
+  description: "Buy, sell, and collect verified fragrances",
   keywords: ["fragrance", "perfume", "cologne", "marketplace", "buy", "sell"],
   icons: {
     icon: "/favicon.ico",
