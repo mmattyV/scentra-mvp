@@ -5,6 +5,7 @@ import type { Listing, UserData, FragranceDetails } from '@/app/types';
 import { STATUS_LABELS, STATUS_COLORS } from '@/app/types';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
+import Image from 'next/image';
 
 interface ListingDetailsModalProps {
   listing: Listing;
@@ -140,10 +141,12 @@ export default function ListingDetailsModal({
                     >
                       <div className="animate-pulse w-full h-full bg-gray-300"></div>
                     </div>
-                    <img 
+                    <Image 
                       src={imageUrl} 
                       alt={fragranceDetails.name} 
-                      className="w-full h-full object-contain"
+                      fill
+                      className="object-contain"
+                      unoptimized={true} /* Skip Next.js image optimization to prevent 403 errors */
                       onLoad={() => setIsImageLoaded(true)}
                     />
                   </>

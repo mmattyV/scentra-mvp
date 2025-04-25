@@ -156,6 +156,7 @@ export default function AdminTable({
                             className="object-contain"
                             style={{ width: '100%', height: '100%' }} 
                             onLoad={() => setLoadedImages(prev => ({ ...prev, [listing.id]: true }))}
+                            unoptimized={true} /* Skip Next.js image optimization to prevent 403 errors */
                             onError={(e) => {
                               // Cast the event target to HTMLImageElement to access src
                               const target = e.target as HTMLImageElement;
