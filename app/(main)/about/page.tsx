@@ -17,7 +17,7 @@ const AboutPage = () => {
               
               <div className="max-w-3xl">
                 <p className="text-2xl md:text-3xl font-medium text-gray-800 leading-tight mb-6">
-                  <span className="font-bold">Three founders. One mission:</span> to bring trust, transparency, and community to fragrance resale.
+                  <span className="font-bold">Three Harvard founders. One mission:</span> to bring trust, transparency, and community to fragrance resale.
                 </p>
                 
                 <div className="h-1 w-24 bg-gradient-to-r from-gray-400 to-gray-700 rounded-full mb-8"></div>
