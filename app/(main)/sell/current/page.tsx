@@ -32,12 +32,7 @@ export default function CurrentListingsPage() {
   // For deletion
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
-  // Handle client-side rendering
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Add an explicit auth check effect
+  // Enhanced authentication check with retry capability
   useEffect(() => {
     const checkAuthStatus = async () => {
       if (!isClient) return;
@@ -54,6 +49,36 @@ export default function CurrentListingsPage() {
     
     checkAuthStatus();
   }, [isClient]);
+
+  // Separate auth check for image loading
+  const [imageAuthAttempts, setImageAuthAttempts] = useState(0);
+  const MAX_AUTH_ATTEMPTS = 5;
+  
+  useEffect(() => {
+    // Only run if we have listings but no images
+    if (!isClient || imageAuthAttempts >= MAX_AUTH_ATTEMPTS || Object.keys(imageUrls).length > 0 || !user) return;
+    
+    if (listings.length > 0 && Object.keys(imageUrls).length === 0) {
+      // Implement exponential backoff for retries (500ms, 1s, 2s, 4s, 8s)
+      const backoffTime = Math.min(8000, 500 * Math.pow(2, imageAuthAttempts));
+      
+      console.log(`Scheduling image auth attempt ${imageAuthAttempts + 1}/${MAX_AUTH_ATTEMPTS} in ${backoffTime}ms`);
+      
+      const timer = setTimeout(() => {
+        console.log(`Executing image auth attempt ${imageAuthAttempts + 1}/${MAX_AUTH_ATTEMPTS}`);
+        setImageAuthAttempts(prev => prev + 1);
+        
+        // Force a re-fetch of the auth session before trying to load images
+        fetchAuthSession().then(() => {
+          fetchListingImages(listings);
+        }).catch(err => {
+          console.error('Authentication session refresh failed:', err);
+        });
+      }, backoffTime);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isClient, listings, imageUrls, user, imageAuthAttempts]);
 
   useEffect(() => {
     if (isClient && isAuthReady && user) {
@@ -108,13 +133,19 @@ export default function CurrentListingsPage() {
       // Skip if no listings
       if (!Array.isArray(listings) || listings.length === 0) return;
       
-      // Wait for auth to be ready before attempting to fetch images
-      if (!isAuthReady) {
-        console.log('Auth not ready yet for image fetching, waiting...');
-        return; // Will be called again when auth is ready
+      // Do a fresh auth check right before getting image URLs
+      try {
+        const authResult = await fetchAuthSession();
+        // Check if we have a valid token
+        if (!authResult.tokens?.accessToken) {
+          console.log('Auth tokens not available yet, will retry...');
+          return;
+        }
+      } catch (error) {
+        console.error('Auth check failed before image fetch:', error);
+        return;
       }
-
-      // Import dynamically to avoid SSR issues
+      
       const { getUrl } = await import('aws-amplify/storage');
       const urls: Record<string, string> = {};
       
@@ -145,14 +176,6 @@ export default function CurrentListingsPage() {
       console.error('Error fetching image URLs:', error);
     }
   };
-
-  // Add an explicit effect to retry fetching images when auth becomes ready
-  useEffect(() => {
-    if (isAuthReady && isClient && user && listings.length > 0 && Object.keys(imageUrls).length === 0) {
-      // Auth is ready but we don't have images yet, retry fetching
-      fetchListingImages(listings);
-    }
-  }, [isAuthReady, isClient, user, listings, imageUrls]);
 
   const startEditing = (listing: Listing) => {
     setEditingId(listing.id);
@@ -276,6 +299,11 @@ export default function CurrentListingsPage() {
       brand: 'Unknown Brand' 
     };
   };
+
+  // Handle client-side rendering
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Don't render on server to prevent hydration issues
   if (!isClient) {

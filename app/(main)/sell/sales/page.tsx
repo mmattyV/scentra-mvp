@@ -51,7 +51,7 @@ export default function SalesPage() {
     setIsClient(true);
   }, []);
   
-  // Add explicit auth check effect
+  // Enhanced authentication check with retry capability
   useEffect(() => {
     const checkAuthStatus = async () => {
       if (!isClient) return;
@@ -68,6 +68,36 @@ export default function SalesPage() {
     
     checkAuthStatus();
   }, [isClient]);
+  
+  // Separate auth check for image loading
+  const [imageAuthAttempts, setImageAuthAttempts] = useState(0);
+  const MAX_AUTH_ATTEMPTS = 5;
+  
+  useEffect(() => {
+    // Only run if we have sales but no images
+    if (!isClient || imageAuthAttempts >= MAX_AUTH_ATTEMPTS || Object.keys(imageUrls).length > 0 || !user) return;
+    
+    if (sales.length > 0 && Object.keys(imageUrls).length === 0) {
+      // Implement exponential backoff for retries (500ms, 1s, 2s, 4s, 8s)
+      const backoffTime = Math.min(8000, 500 * Math.pow(2, imageAuthAttempts));
+      
+      console.log(`Scheduling image auth attempt ${imageAuthAttempts + 1}/${MAX_AUTH_ATTEMPTS} in ${backoffTime}ms`);
+      
+      const timer = setTimeout(() => {
+        console.log(`Executing image auth attempt ${imageAuthAttempts + 1}/${MAX_AUTH_ATTEMPTS}`);
+        setImageAuthAttempts(prev => prev + 1);
+        
+        // Force a re-fetch of the auth session before trying to load images
+        fetchAuthSession().then(() => {
+          fetchSaleImages(sales);
+        }).catch(err => {
+          console.error('Authentication session refresh failed:', err);
+        });
+      }, backoffTime);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isClient, sales, imageUrls, user, imageAuthAttempts]);
   
   useEffect(() => {
     if (isClient && isAuthReady && user) {
@@ -220,10 +250,17 @@ export default function SalesPage() {
       // Skip if no items
       if (!Array.isArray(items) || items.length === 0) return;
       
-      // Wait for auth to be ready before attempting to fetch images
-      if (!isAuthReady) {
-        console.log('Auth not ready yet for image fetching, waiting...');
-        return; // Will be called again when auth is ready
+      // Do a fresh auth check right before getting image URLs
+      try {
+        const authResult = await fetchAuthSession();
+        // Check if we have a valid token
+        if (!authResult.tokens?.accessToken) {
+          console.log('Auth tokens not available yet, will retry...');
+          return;
+        }
+      } catch (error) {
+        console.error('Auth check failed before image fetch:', error);
+        return;
       }
       
       const { getUrl } = await import('aws-amplify/storage');
@@ -256,14 +293,6 @@ export default function SalesPage() {
       console.error('Error fetching image URLs:', error);
     }
   };
-
-  // Add an explicit effect to retry fetching images when auth becomes ready
-  useEffect(() => {
-    if (isAuthReady && isClient && user && sales.length > 0 && Object.keys(imageUrls).length === 0) {
-      // Auth is ready but we don't have images yet, retry fetching
-      fetchSaleImages(sales);
-    }
-  }, [isAuthReady, isClient, user, sales, imageUrls]);
 
   const handleConfirmClick = (item: SaleItem) => {
     setConfirmingItem(item);
