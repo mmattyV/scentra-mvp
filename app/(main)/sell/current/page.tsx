@@ -32,7 +32,7 @@ export default function CurrentListingsPage() {
   // For deletion
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
-  // Enhanced authentication check with retry capability
+  // Enhanced authentication check
   useEffect(() => {
     const checkAuthStatus = async () => {
       if (!isClient) return;
@@ -49,36 +49,6 @@ export default function CurrentListingsPage() {
     
     checkAuthStatus();
   }, [isClient]);
-
-  // Separate auth check for image loading
-  const [imageAuthAttempts, setImageAuthAttempts] = useState(0);
-  const MAX_AUTH_ATTEMPTS = 5;
-  
-  useEffect(() => {
-    // Only run if we have listings but no images
-    if (!isClient || imageAuthAttempts >= MAX_AUTH_ATTEMPTS || Object.keys(imageUrls).length > 0 || !user) return;
-    
-    if (listings.length > 0 && Object.keys(imageUrls).length === 0) {
-      // Implement exponential backoff for retries (500ms, 1s, 2s, 4s, 8s)
-      const backoffTime = Math.min(8000, 500 * Math.pow(2, imageAuthAttempts));
-      
-      console.log(`Scheduling image auth attempt ${imageAuthAttempts + 1}/${MAX_AUTH_ATTEMPTS} in ${backoffTime}ms`);
-      
-      const timer = setTimeout(() => {
-        console.log(`Executing image auth attempt ${imageAuthAttempts + 1}/${MAX_AUTH_ATTEMPTS}`);
-        setImageAuthAttempts(prev => prev + 1);
-        
-        // Force a re-fetch of the auth session before trying to load images
-        fetchAuthSession().then(() => {
-          fetchListingImages(listings);
-        }).catch(err => {
-          console.error('Authentication session refresh failed:', err);
-        });
-      }, backoffTime);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isClient, listings, imageUrls, user, imageAuthAttempts]);
 
   useEffect(() => {
     if (isClient && isAuthReady && user) {
@@ -133,12 +103,11 @@ export default function CurrentListingsPage() {
       // Skip if no listings
       if (!Array.isArray(listings) || listings.length === 0) return;
       
-      // Do a fresh auth check right before getting image URLs
+      // Simple auth check before getting image URLs
       try {
         const authResult = await fetchAuthSession();
-        // Check if we have a valid token
         if (!authResult.tokens?.accessToken) {
-          console.log('Auth tokens not available yet, will retry...');
+          console.log('Auth tokens not available yet');
           return;
         }
       } catch (error) {
@@ -378,6 +347,7 @@ export default function CurrentListingsPage() {
                                 fill
                                 style={{ objectFit: 'cover' }}
                                 onLoad={() => setLoadedImages(prev => ({ ...prev, [listing.id]: true }))}
+                                unoptimized={true} /* Skip Next.js image optimization to prevent 403 errors */
                               />
                             </>
                           ) : (
