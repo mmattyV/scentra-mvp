@@ -108,6 +108,13 @@ export default function CurrentListingsPage() {
       // Skip if no listings
       if (!Array.isArray(listings) || listings.length === 0) return;
       
+      // Wait for auth to be ready before attempting to fetch images
+      if (!isAuthReady) {
+        console.log('Auth not ready yet for image fetching, waiting...');
+        return; // Will be called again when auth is ready
+      }
+
+      // Import dynamically to avoid SSR issues
       const { getUrl } = await import('aws-amplify/storage');
       const urls: Record<string, string> = {};
       
@@ -120,6 +127,9 @@ export default function CurrentListingsPage() {
           try {
             const result = await getUrl({
               path: listing.imageKey,
+              options: {
+                expiresIn: 3600 // URL expiration time in seconds
+              }
             });
             urls[listing.id] = result.url.toString();
           } catch (error) {
@@ -135,6 +145,14 @@ export default function CurrentListingsPage() {
       console.error('Error fetching image URLs:', error);
     }
   };
+
+  // Add an explicit effect to retry fetching images when auth becomes ready
+  useEffect(() => {
+    if (isAuthReady && isClient && user && listings.length > 0 && Object.keys(imageUrls).length === 0) {
+      // Auth is ready but we don't have images yet, retry fetching
+      fetchListingImages(listings);
+    }
+  }, [isAuthReady, isClient, user, listings, imageUrls]);
 
   const startEditing = (listing: Listing) => {
     setEditingId(listing.id);

@@ -220,6 +220,12 @@ export default function SalesPage() {
       // Skip if no items
       if (!Array.isArray(items) || items.length === 0) return;
       
+      // Wait for auth to be ready before attempting to fetch images
+      if (!isAuthReady) {
+        console.log('Auth not ready yet for image fetching, waiting...');
+        return; // Will be called again when auth is ready
+      }
+      
       const { getUrl } = await import('aws-amplify/storage');
       const urls: Record<string, string> = {};
       
@@ -232,6 +238,9 @@ export default function SalesPage() {
           try {
             const result = await getUrl({
               path: item.imageKey,
+              options: {
+                expiresIn: 3600 // URL expiration time in seconds
+              }
             });
             urls[item.id] = result.url.toString();
           } catch (error) {
@@ -247,6 +256,14 @@ export default function SalesPage() {
       console.error('Error fetching image URLs:', error);
     }
   };
+
+  // Add an explicit effect to retry fetching images when auth becomes ready
+  useEffect(() => {
+    if (isAuthReady && isClient && user && sales.length > 0 && Object.keys(imageUrls).length === 0) {
+      // Auth is ready but we don't have images yet, retry fetching
+      fetchSaleImages(sales);
+    }
+  }, [isAuthReady, isClient, user, sales, imageUrls]);
 
   const handleConfirmClick = (item: SaleItem) => {
     setConfirmingItem(item);
