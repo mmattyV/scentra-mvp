@@ -32,12 +32,7 @@ export default function CurrentListingsPage() {
   // For deletion
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
-  // Handle client-side rendering
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Add an explicit auth check effect
+  // Enhanced authentication check
   useEffect(() => {
     const checkAuthStatus = async () => {
       if (!isClient) return;
@@ -108,6 +103,18 @@ export default function CurrentListingsPage() {
       // Skip if no listings
       if (!Array.isArray(listings) || listings.length === 0) return;
       
+      // Simple auth check before getting image URLs
+      try {
+        const authResult = await fetchAuthSession();
+        if (!authResult.tokens?.accessToken) {
+          console.log('Auth tokens not available yet');
+          return;
+        }
+      } catch (error) {
+        console.error('Auth check failed before image fetch:', error);
+        return;
+      }
+      
       const { getUrl } = await import('aws-amplify/storage');
       const urls: Record<string, string> = {};
       
@@ -120,6 +127,9 @@ export default function CurrentListingsPage() {
           try {
             const result = await getUrl({
               path: listing.imageKey,
+              options: {
+                expiresIn: 3600 // URL expiration time in seconds
+              }
             });
             urls[listing.id] = result.url.toString();
           } catch (error) {
@@ -259,6 +269,11 @@ export default function CurrentListingsPage() {
     };
   };
 
+  // Handle client-side rendering
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Don't render on server to prevent hydration issues
   if (!isClient) {
     return null;
@@ -332,6 +347,7 @@ export default function CurrentListingsPage() {
                                 fill
                                 style={{ objectFit: 'cover' }}
                                 onLoad={() => setLoadedImages(prev => ({ ...prev, [listing.id]: true }))}
+                                unoptimized={true} /* Skip Next.js image optimization to prevent 403 errors */
                               />
                             </>
                           ) : (

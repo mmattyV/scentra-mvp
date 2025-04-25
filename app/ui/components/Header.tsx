@@ -17,6 +17,7 @@ export default function Header() {
   const [isMobileSellerMenuOpen, setIsMobileSellerMenuOpen] = useState(false);
   const [userName, setUserName] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const { authStatus, signOut, user } = useAuthenticator(context => [context.authStatus, context.user]);
   const router = useRouter();
 
@@ -68,9 +69,14 @@ export default function Header() {
           setUserName('there');
         }
       }
+      setIsAuthLoading(false);
     };
     
-    fetchUserData();
+    if (authStatus === "unauthenticated") {
+      setIsAuthLoading(false);
+    } else {
+      fetchUserData();
+    }
   }, [authStatus, user]);
 
   // Handle search submission
@@ -94,6 +100,9 @@ export default function Header() {
     const linkClass = isMobile 
       ? "block px-4 py-3 text-base text-gray-700 hover:bg-gray-100"
       : "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100";
+    
+    // Don't render anything during auth loading
+    if (isAuthLoading) return null;
     
     return authStatus === "authenticated" ? (
       <>
@@ -207,25 +216,27 @@ export default function Header() {
           <div className="hidden md:flex items-center space-x-8">
             {/* Sell Button with Dropdown */}
             <div className="relative" ref={sellMenuRef}>
-              <button
-                onClick={() => setIsSellMenuOpen(!isSellMenuOpen)}
-                className="flex items-center space-x-1 text-gray-700 hover:text-gray-900"
-              >
-                <span>Sell</span>
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              {!isAuthLoading && (
+                <button
+                  onClick={() => setIsSellMenuOpen(!isSellMenuOpen)}
+                  className="flex items-center space-x-1 text-gray-700 hover:text-gray-900"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
+                  <span>Sell</span>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+              )}
               {isSellMenuOpen && (
                 <div className="absolute -right-2 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                   {renderSellMenuItems()}
@@ -315,12 +326,14 @@ export default function Header() {
             {/* Hello User Message */}
             {authStatus === "authenticated" && (
               <div className="text-sm font-medium text-gray-700">
-                Hello {userName}!
+                {userName ? `Hello ${userName}!` : <div className="h-5 w-16 bg-gray-100 rounded animate-pulse"></div>}
               </div>
             )}
 
             {/* Authentication Button - Rightmost with black box */}
-            {authStatus === "authenticated" ? (
+            {isAuthLoading ? (
+              <div className="h-9 w-24 bg-gray-100 rounded-lg animate-pulse"></div>
+            ) : authStatus === "authenticated" ? (
               <button
                 onClick={() => {
                   signOut();
@@ -395,15 +408,16 @@ export default function Header() {
             className="md:hidden fixed inset-0 top-[65px] bg-white z-50 overflow-y-auto h-[calc(100vh-65px)]"
           >
             <div className="p-4 border-b border-gray-200">
-              {authStatus === "authenticated" ? (
+              {isAuthLoading ? (
+                <div className="h-9 w-24 bg-gray-100 rounded-lg animate-pulse"></div>
+              ) : authStatus === "authenticated" ? (
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-base font-medium text-gray-800">
-                    Hello {userName}!
+                    {userName ? `Hello ${userName}!` : <div className="h-6 w-20 bg-gray-100 rounded animate-pulse"></div>}
                   </div>
                   <button
                     onClick={() => {
                       signOut();
-                      router.push('/auth');
                       setIsMobileMenuOpen(false);
                     }}
                     className="text-sm font-medium text-white bg-black flex items-center justify-center px-3 py-2 rounded-md transition duration-200 hover:bg-gray-800"
@@ -425,11 +439,12 @@ export default function Header() {
                   </button>
                 </div>
               ) : (
-                <Link
-                  href="/auth"
+                <div className="flex flex-col gap-3">
+                  <Link
+                    href="/auth"
                   className="w-full text-base font-medium text-white bg-black flex items-center justify-center px-4 py-3 rounded-md transition duration-200 hover:bg-gray-800 mb-2"
-                  onClick={handleMobileNavigation}
-                >
+                    onClick={handleMobileNavigation}
+                  >
                   <svg
                     className="w-5 h-5 mr-2 flex-shrink-0"
                     fill="none"
@@ -444,7 +459,8 @@ export default function Header() {
                     />
                   </svg>
                   Log In
-                </Link>
+                  </Link>
+                </div>
               )}
             </div>
 

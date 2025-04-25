@@ -51,7 +51,7 @@ export default function SalesPage() {
     setIsClient(true);
   }, []);
   
-  // Add explicit auth check effect
+  // Enhanced authentication check
   useEffect(() => {
     const checkAuthStatus = async () => {
       if (!isClient) return;
@@ -220,6 +220,18 @@ export default function SalesPage() {
       // Skip if no items
       if (!Array.isArray(items) || items.length === 0) return;
       
+      // Simple auth check before getting image URLs
+      try {
+        const authResult = await fetchAuthSession();
+        if (!authResult.tokens?.accessToken) {
+          console.log('Auth tokens not available yet');
+          return;
+        }
+      } catch (error) {
+        console.error('Auth check failed before image fetch:', error);
+        return;
+      }
+      
       const { getUrl } = await import('aws-amplify/storage');
       const urls: Record<string, string> = {};
       
@@ -232,6 +244,9 @@ export default function SalesPage() {
           try {
             const result = await getUrl({
               path: item.imageKey,
+              options: {
+                expiresIn: 3600 // URL expiration time in seconds
+              }
             });
             urls[item.id] = result.url.toString();
           } catch (error) {
@@ -487,6 +502,7 @@ export default function SalesPage() {
                                 fill
                                 style={{ objectFit: 'cover' }}
                                 onLoad={() => setLoadedImages(prev => ({ ...prev, [item.id]: true }))}
+                                unoptimized={true} /* Skip Next.js image optimization to prevent 403 errors */
                               />
                             </>
                           ) : (

@@ -370,6 +370,7 @@ export default function OrderDetailsModal({
                             fill
                             className="object-contain rounded-md"
                             onLoad={() => setLoadedImages(prev => ({ ...prev, [item.id]: true }))}
+                            unoptimized={true} /* Skip Next.js image optimization to prevent 403 errors */
                           />
                         </>
                       )}
