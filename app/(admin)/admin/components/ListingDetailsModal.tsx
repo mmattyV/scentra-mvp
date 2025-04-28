@@ -190,6 +190,12 @@ export default function ListingDetailsModal({
                     <span className="text-gray-500">Original Box:</span>{' '}
                     <span>{listing.hasOriginalBox ? 'Yes' : 'No'}</span>
                   </div>
+                  {listing.batchCode && (
+                    <div>
+                      <span className="text-gray-500">Batch Code:</span>{' '}
+                      <span>{listing.batchCode}</span>
+                    </div>
+                  )}
                   <div>
                     <span className="text-gray-500">Price:</span>{' '}
                     <span className="font-medium">${listing.askingPrice.toFixed(2)}</span>

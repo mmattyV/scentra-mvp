@@ -8,6 +8,7 @@ export interface Listing {
   condition: string;
   percentRemaining?: number;
   hasOriginalBox: boolean;
+  batchCode?: string;
   askingPrice: number;
   imageKey: string;
   status: string;
@@ -60,6 +61,7 @@ export interface CartItem {
   condition: string;
   percentRemaining?: number;
   hasOriginalBox: boolean;
+  batchCode?: string;
   originalPrice: number;
   currentPrice: number;
   imageUrl: string;
@@ -93,6 +95,7 @@ export interface OrderItem {
   condition: string;
   percentRemaining?: number;
   hasOriginalBox: boolean;
+  batchCode?: string;
   price: number;
   imageUrl: string;
   imageKey: string;

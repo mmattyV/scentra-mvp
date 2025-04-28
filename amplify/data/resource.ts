@@ -26,6 +26,7 @@ const schema = a.schema({
       condition: a.string().required(), // "new" or "used" 
       percentRemaining: a.integer(), // Only applies if condition is "used"
       hasOriginalBox: a.boolean().default(false), // Whether the item comes with its original box
+      batchCode: a.string(), // Optional batch code for authenticity verification
       askingPrice: a.float().required(),
       status: a.string().default("active"), // "active", "sold", "removed"
       imageKey: a.string().required(), // S3 key for the image in Amplify Storage
@@ -79,6 +80,7 @@ const schema = a.schema({
       condition: a.string().required(),
       percentRemaining: a.integer(),
       hasOriginalBox: a.boolean().default(false),
+      batchCode: a.string(), // Optional batch code for authenticity verification
       price: a.float().required(),
       imageUrl: a.string().required(),
       status: a.string().required(),

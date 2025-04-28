@@ -338,6 +338,9 @@ export default function ProductDetailsPage() {
                                     ? "Includes original box"
                                     : "No original box"}
                                 </p>
+                                {listing.batchCode && (
+                                  <p>Batch Code: {listing.batchCode}</p>
+                                )}
                               </div>
                             </div>
                             {selectedListingId === listing.id && (
