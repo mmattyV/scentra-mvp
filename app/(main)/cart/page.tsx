@@ -162,6 +162,9 @@ export default function CartPage() {
                               <p>Open box</p>
                             )}
                             <p>{item.hasOriginalBox ? 'Includes original box' : 'No original box'}</p>
+                            {item.batchCode && (
+                              <p>Batch Code: {item.batchCode}</p>
+                            )}
                           </div>
                         </div>
                         

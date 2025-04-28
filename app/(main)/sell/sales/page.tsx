@@ -522,6 +522,11 @@ export default function SalesPage() {
                           <p className="text-sm text-gray-500 truncate">
                             {item.hasOriginalBox ? 'With original box' : 'No original box'}
                           </p>
+                          {item.batchCode && (
+                            <p className="text-sm text-gray-500 truncate">
+                              Batch Code: {item.batchCode}
+                            </p>
+                          )}
                           <div className="mt-1">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[item.status as SaleStatus] || 'bg-gray-100 text-gray-800'}`}>
                               {STATUS_LABELS[item.status as SaleStatus] || item.status}

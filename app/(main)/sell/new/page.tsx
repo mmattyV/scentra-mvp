@@ -32,6 +32,7 @@ export default function NewListingPage() {
   const [condition, setCondition] = useState('new');
   const [percentRemaining, setPercentRemaining] = useState(100);
   const [hasOriginalBox, setHasOriginalBox] = useState(false);
+  const [batchCode, setBatchCode] = useState('');
   const [askingPrice, setAskingPrice] = useState('');
   
   // Search and fragrance selection state
@@ -383,6 +384,7 @@ export default function NewListingPage() {
         condition,
         percentRemaining: condition === 'used' ? percentRemaining : undefined,
         hasOriginalBox,
+        batchCode: batchCode || undefined, // Only include if provided
         askingPrice: parseFloat(askingPrice),
         imageKey: imageKey,
         status: 'active',
@@ -576,6 +578,21 @@ export default function NewListingPage() {
                 />
                 <span className="text-sm font-medium text-gray-700">Includes Original Box</span>
               </label>
+            </div>
+            
+            {/* Batch Code */}
+            <div className="space-y-2">
+              <label htmlFor="batchCode" className="block text-sm font-medium text-gray-700">
+                Batch Code (optional)
+              </label>
+              <input
+                id="batchCode"
+                type="text"
+                value={batchCode}
+                onChange={(e) => setBatchCode(e.target.value)}
+                placeholder="Enter batch code or year of manufacture"
+                className="w-full px-4 py-2 border rounded-lg focus:ring-1 focus:ring-black focus:outline-none border-gray-300"
+              />
             </div>
             
             {/* Image Upload */}

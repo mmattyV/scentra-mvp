@@ -386,6 +386,7 @@ export default function OrderDetailsModal({
                             {item.condition === 'used' && item.percentRemaining !== undefined && 
                               ` • ${item.percentRemaining}% remaining`}
                             {` • ${item.hasOriginalBox ? 'With original box' : 'No original box'}`}
+                            {item.batchCode && ` • Batch Code: ${item.batchCode}`}
                           </p>
                           
                           <div className="mt-2">

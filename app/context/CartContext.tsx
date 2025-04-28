@@ -126,6 +126,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         condition: listing.condition,
         percentRemaining: listing.percentRemaining,
         hasOriginalBox: listing.hasOriginalBox || false,
+        batchCode: listing.batchCode, // Include batch code if available
         originalPrice: listing.askingPrice,
         currentPrice: listing.askingPrice,
         addedAt: new Date().toISOString(),
@@ -326,6 +327,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         condition: item.condition,
         percentRemaining: item.percentRemaining,
         hasOriginalBox: item.hasOriginalBox,
+        batchCode: item.batchCode, // Include batch code if available
         price: item.currentPrice,
         imageUrl: item.imageUrl,
         status: 'unconfirmed' as SaleStatus
@@ -397,6 +399,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
               condition: item.condition,
               percentRemaining: item.percentRemaining,
               hasOriginalBox: item.hasOriginalBox,
+              batchCode: item.batchCode, // Include batch code if available
               price: item.price,
               imageUrl: item.imageUrl,
               status: item.status

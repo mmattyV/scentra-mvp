@@ -8,6 +8,7 @@ export interface Listing {
   condition: string;
   percentRemaining?: number;
   hasOriginalBox: boolean;
+  batchCode?: string;
   askingPrice: number;
   imageKey: string;
   status: string;
@@ -26,6 +27,7 @@ export interface FragranceGroup {
   lowestPrice: number;
   imageUrl: string;
   listings: Listing[];
+  condition: string;
 }
 
 export type SaleStatus = 'on_hold' | 'unconfirmed' | 'shipping_to_scentra' | 'verifying' | 'shipping_to_buyer' | 'completed';
@@ -60,6 +62,7 @@ export interface CartItem {
   condition: string;
   percentRemaining?: number;
   hasOriginalBox: boolean;
+  batchCode?: string;
   originalPrice: number;
   currentPrice: number;
   imageUrl: string;
@@ -93,6 +96,7 @@ export interface OrderItem {
   condition: string;
   percentRemaining?: number;
   hasOriginalBox: boolean;
+  batchCode?: string;
   price: number;
   imageUrl: string;
   imageKey: string;

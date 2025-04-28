@@ -169,13 +169,20 @@ function HomePageContent() {
                   // Find lowest price
                   const lowestPrice = Math.min(...fragranceListings.map(listing => listing.askingPrice));
                   
+                  // Find the listing with the lowest price to get its condition
+                  const lowestPriceListing = fragranceListings.find(
+                    listing => listing.askingPrice === lowestPrice
+                  );
+                  const lowestPriceCond = lowestPriceListing?.condition || 'Unknown';
+                  
                   groups.push({
                     fragranceId,
                     name: fragranceData.name,
                     brand: fragranceData.brand,
                     lowestPrice,
                     imageUrl,
-                    listings: fragranceListings
+                    listings: fragranceListings,
+                    condition: lowestPriceCond
                   });
                 }
               }
@@ -306,7 +313,7 @@ function HomePageContent() {
                         <div className="p-4">
                           <h3 className="text-sm text-gray-500">{group.brand}</h3>
                           <h2 className="font-medium text-gray-900 mb-1">{group.name}</h2>
-                          <p className="text-gray-800">From {formatPrice(group.lowestPrice)}</p>
+                          <p className="text-gray-800">{group.condition === 'used' ? 'Used' : 'New'} from {formatPrice(group.lowestPrice)}</p>
                         </div>
                       </Link>
                     ))

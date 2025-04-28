@@ -150,6 +150,7 @@ export default function OrderDetails({ order, items, onCancelOrder }: OrderDetai
                           {item.bottleSize} • {item.condition}
                           {item.condition === 'used' && item.percentRemaining !== undefined && ` • ${item.percentRemaining}% remaining`}
                           {` • ${item.hasOriginalBox ? 'With original box' : 'No original box'}`}
+                          {item.batchCode && ` • Batch Code: ${item.batchCode}`}
                         </p>
                       </div>
                       <div className="text-right">

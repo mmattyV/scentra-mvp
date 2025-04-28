@@ -367,6 +367,11 @@ export default function CurrentListingsPage() {
                           <p className="text-sm text-gray-500 truncate">
                             {listing.hasOriginalBox ? 'With original box' : 'No original box'}
                           </p>
+                          {listing.batchCode && (
+                            <p className="text-sm text-gray-500 truncate">
+                              Batch Code: {listing.batchCode}
+                            </p>
+                          )}
                           <div className="mt-1">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               Active
