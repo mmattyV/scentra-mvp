@@ -583,14 +583,14 @@ export default function NewListingPage() {
             {/* Batch Code */}
             <div className="space-y-2">
               <label htmlFor="batchCode" className="block text-sm font-medium text-gray-700">
-                Batch Code
+                Batch Code (optional)
               </label>
               <input
                 id="batchCode"
                 type="text"
                 value={batchCode}
                 onChange={(e) => setBatchCode(e.target.value)}
-                placeholder="Enter batch code"
+                placeholder="Enter batch code or year of manufacture"
                 className="w-full px-4 py-2 border rounded-lg focus:ring-1 focus:ring-black focus:outline-none border-gray-300"
               />
             </div>

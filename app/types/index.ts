@@ -27,6 +27,7 @@ export interface FragranceGroup {
   lowestPrice: number;
   imageUrl: string;
   listings: Listing[];
+  condition: string;
 }
 
 export type SaleStatus = 'on_hold' | 'unconfirmed' | 'shipping_to_scentra' | 'verifying' | 'shipping_to_buyer' | 'completed';

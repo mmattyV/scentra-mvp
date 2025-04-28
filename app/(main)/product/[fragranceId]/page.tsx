@@ -284,7 +284,7 @@ export default function ProductDetailsPage() {
 
                 {listings.length > 0 ? (
                   <p className="text-2xl font-semibold text-black mt-6">
-                    Starting at {formatPrice(listings[0].askingPrice)}
+                    {listings[0].condition === 'used' ? 'Used starting at' : 'Starting at'} {formatPrice(listings[0].askingPrice)}
                   </p>
                 ) : (
                   <p className="text-2xl font-medium text-gray-500 mt-6">
