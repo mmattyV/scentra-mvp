@@ -34,6 +34,8 @@ export default function NewListingPage() {
   const [hasOriginalBox, setHasOriginalBox] = useState(false);
   const [batchCode, setBatchCode] = useState('');
   const [askingPrice, setAskingPrice] = useState('');
+  const [quantity, setQuantity] = useState<number>(1);
+  const [isMultipleItems, setIsMultipleItems] = useState(false);
   
   // Search and fragrance selection state
   const [searchQuery, setSearchQuery] = useState('');
@@ -54,6 +56,7 @@ export default function NewListingPage() {
     askingPrice?: string;
     image?: string;
     paymentHandle?: string;
+    quantity?: string;
   }>({});
 
   // Image handling state
@@ -236,6 +239,7 @@ export default function NewListingPage() {
       askingPrice?: string;
       image?: string;
       paymentHandle?: string;
+      quantity?: string;
     } = {};
 
     if (!fragranceId) {
@@ -260,6 +264,10 @@ export default function NewListingPage() {
     
     if (!paymentHandle) {
       errors.paymentHandle = 'Please enter your payment handle';
+    }
+
+    if (isMultipleItems && (quantity < 1 || !Number.isInteger(Number(quantity)))) {
+      errors.quantity = 'Quantity must be a positive whole number';
     }
 
     setValidationErrors(errors);
@@ -376,21 +384,26 @@ export default function NewListingPage() {
         });
       }
       
-      // Create the listing with the image key - specify userPool auth mode
-      await client.models.Listing.create({
-        sellerId: user.userId,
-        fragranceId,
-        bottleSize,
-        condition,
-        percentRemaining: condition === 'used' ? percentRemaining : undefined,
-        hasOriginalBox,
-        batchCode: batchCode || undefined, // Only include if provided
-        askingPrice: parseFloat(askingPrice),
-        imageKey: imageKey,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+      // Create multiple listings if checkbox is checked and quantity > 1, otherwise create a single listing
+      const listingCount = isMultipleItems ? Math.max(1, Number(quantity)) : 1;
+      
+      // Create the specified number of listings
+      for (let i = 0; i < listingCount; i++) {
+        await client.models.Listing.create({
+          sellerId: user.userId,
+          fragranceId,
+          bottleSize,
+          condition,
+          percentRemaining: condition === 'used' ? percentRemaining : undefined,
+          hasOriginalBox,
+          batchCode: batchCode || undefined, // Only include if provided
+          askingPrice: parseFloat(askingPrice),
+          imageKey: imageKey,
+          status: 'active',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      }
       
       // Redirect to confirmation page
       router.push('/sell/new/confirm');
@@ -569,16 +582,63 @@ export default function NewListingPage() {
             
             {/* Original Box */}
             <div className="space-y-2">
-              <label className="flex items-center space-x-2 cursor-pointer">
+              <div className="flex items-center space-x-2">
                 <input
+                  id="hasOriginalBox"
                   type="checkbox"
                   checked={hasOriginalBox}
                   onChange={(e) => setHasOriginalBox(e.target.checked)}
-                  className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                  className="w-4 h-4 text-black focus:ring-black border-gray-300 rounded"
                 />
-                <span className="text-sm font-medium text-gray-700">Includes Original Box</span>
-              </label>
+                <label htmlFor="hasOriginalBox" className="text-sm font-medium text-gray-700">
+                  Includes original box
+                </label>
+              </div>
             </div>
+            
+            {/* List Multiple Items Checkbox */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <input
+                  id="isMultipleItems"
+                  type="checkbox"
+                  checked={isMultipleItems}
+                  onChange={(e) => {
+                    setIsMultipleItems(e.target.checked);
+                    if (!e.target.checked) {
+                      setQuantity(1);
+                    }
+                  }}
+                  className="w-4 h-4 text-black focus:ring-black border-gray-300 rounded"
+                />
+                <label htmlFor="isMultipleItems" className="text-sm font-medium text-gray-700">
+                  List multiple of the same product
+                </label>
+              </div>
+            </div>
+            
+            {/* Quantity - only show if isMultipleItems is checked */}
+            {isMultipleItems && (
+              <div className="space-y-2">
+                <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
+                  Quantity
+                </label>
+                <input
+                  id="quantity"
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) => setQuantity(Number(e.target.value) || 1)}
+                  placeholder="Enter quantity"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-1 focus:ring-black focus:outline-none ${
+                    validationErrors.quantity ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {validationErrors.quantity && (
+                  <p className="text-red-500 text-sm mt-1">{validationErrors.quantity}</p>
+                )}
+              </div>
+            )}
             
             {/* Batch Code */}
             <div className="space-y-2">
