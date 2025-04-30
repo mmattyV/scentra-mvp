@@ -567,7 +567,7 @@ export default function NewListingPage() {
                   type="range"
                   min="10"
                   max="100"
-                  step="10"
+                  step="5"
                   value={percentRemaining}
                   onChange={(e) => setPercentRemaining(parseInt(e.target.value))}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
