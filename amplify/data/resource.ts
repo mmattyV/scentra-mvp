@@ -35,7 +35,7 @@ const schema = a.schema({
     })
     .authorization((allow) => [
       // Public API key users can only read
-      allow.publicApiKey().to(['read']),
+      allow.guest().to(['read']),
       // Authenticated users have full access
       allow.authenticated(),
       // Admin group has full access
@@ -105,13 +105,3 @@ const schema = a.schema({
 });
 
 export type Schema = ClientSchema<typeof schema>;
-
-export const data = defineData({
-  schema,
-  authorizationModes: {
-    defaultAuthorizationMode: "apiKey",
-    apiKeyAuthorizationMode: {
-      expiresInDays: 30,
-    },
-  },
-});
